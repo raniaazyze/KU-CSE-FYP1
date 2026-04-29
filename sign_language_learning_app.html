@@ -1,4 +1,9 @@
-
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Platform</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
 
@@ -6,28 +11,34 @@
 
   #app {
     font-family: 'Noto Sans KR', sans-serif;
-    background: #0d1f18;
+    background: #002B5B; /* Deaf Flag Blue */
     color: #e8f5ee;
-    min-height: 600px;
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
+    min-height: 100vh; /* Changed to fill full screen height */
+    width: 100vw;
+    margin: 0;
+    padding: 0;
   }
 
-  .screen { display: none; flex-direction: column; height: 100%; }
+  .screen { 
+    display: none; 
+    flex-direction: column; 
+    height: 100%;
+  min-height: 100vh; 
+}
   .screen.active { display: flex; }
 
   /* ── TOP NAV ── */
   .topnav {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px;
-    border-bottom: 0.5px solid rgba(100,220,150,0.2);
-    background: #0a1912;
+    border-bottom: 0.5px solid rgba(64, 224, 208, 0.2);
+    background: #001C3D; /* Deaf Flag Darker Navy */
   }
   .topnav .logo {
     font-family: 'Space Mono', monospace;
     font-size: 13px; font-weight: 700;
-    color: #4dcc8a; letter-spacing: 0.05em;
+    color: #40E0D0; /* Deaf Flag Turquoise */
+    letter-spacing: 0.05em;
   }
   .topnav .nav-links { display: flex; gap: 6px; }
   .topnav .nav-links button {
@@ -36,15 +47,15 @@
     font-size: 12px; padding: 5px 10px; border-radius: 6px; cursor: pointer;
   }
   .topnav .nav-links button:hover, .topnav .nav-links button.active {
-    background: rgba(77,204,138,0.12); color: #4dcc8a;
+    background: rgba(64, 224, 208, 0.12); color: #40E0D0;
   }
   .topnav .user-badge {
     display: flex; align-items: center; gap: 8px;
   }
   .topnav .avatar {
     width: 28px; height: 28px; border-radius: 50%;
-    background: #1d5c3a; display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: #4dcc8a;
+    background: #002B5B; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #40E0D0;
   }
 
   /* ── CONTENT AREA ── */
@@ -52,39 +63,47 @@
 
   /* ── LOGIN SCREEN ── */
   #screen-login {
-    align-items: center; justify-content: center;
-    background: #0d1f18;
-    padding: 40px 20px;
+    display: none;
+    align-items: center; 
+    justify-content: center;
+    background: #002B5B;
+    padding: 20px;
+    width: 100%;
   }
+
+  #screen-login.active {
+  display: flex; /* This activates the centering */
+  }
+
   .login-box {
     width: 100%; max-width: 340px;
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.25);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.25);
     border-radius: 16px; padding: 32px 28px;
   }
   .login-box h1 {
     font-family: 'Space Mono', monospace; font-size: 18px;
-    color: #4dcc8a; margin-bottom: 4px;
+    color: #40E0D0; margin-bottom: 4px;
   }
   .login-box .subtitle {
     font-size: 12px; color: #6a9878; margin-bottom: 24px;
   }
   .field-label { font-size: 11px; color: #6a9878; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
   .field-input {
-    width: 100%; background: #0d1f18; border: 0.5px solid rgba(77,204,138,0.3);
+    width: 100%; background: #002B5B; border: 0.5px solid rgba(64, 224, 208, 0.3);
     border-radius: 8px; padding: 10px 12px; color: #e8f5ee;
     font-family: 'Noto Sans KR', sans-serif; font-size: 13px;
     margin-bottom: 14px; outline: none;
   }
-  .field-input:focus { border-color: #4dcc8a; }
+  .field-input:focus { border-color: #FFD700; }
   .btn-primary {
-    width: 100%; background: #4dcc8a; border: none; border-radius: 8px;
+    width: 100%; background: #FFD700; border: none; border-radius: 8px; /* Deaf Flag Yellow */
     padding: 11px; font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px; font-weight: 700; color: #0a1912; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: #001C3D; cursor: pointer;
     transition: opacity 0.15s;
   }
   .btn-primary:hover { opacity: 0.85; }
   .login-switch { text-align: center; margin-top: 14px; font-size: 11px; color: #6a9878; }
-  .login-switch span { color: #4dcc8a; cursor: pointer; }
+  .login-switch span { color: #FFD700; cursor: pointer; }
 
   /* ── DASHBOARD ── */
   .greeting { font-size: 18px; font-weight: 700; color: #e8f5ee; margin-bottom: 2px; }
@@ -92,70 +111,69 @@
 
   .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-card {
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.15);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.15);
     border-radius: 10px; padding: 14px 12px; text-align: center;
   }
-  .stat-card .stat-val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: #4dcc8a; }
+  .stat-card .stat-val { font-family: 'Space Mono', monospace; font-size: 22px; font-weight: 700; color: #FFD700; }
   .stat-card .stat-lbl { font-size: 10px; color: #6a9878; margin-top: 2px; }
 
-  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #6a9878; margin-bottom: 10px; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #40E0D0; margin-bottom: 10px; }
 
   .progress-item {
     display: flex; align-items: center; gap: 12px;
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.12);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.12);
     border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
   }
-  .progress-item:hover { border-color: rgba(77,204,138,0.4); }
+  .progress-item:hover { border-color: #40E0D0; }
   .progress-icon {
     width: 36px; height: 36px; border-radius: 8px;
-    background: #0d1f18; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+    background: #002B5B; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
   }
   .progress-info { flex: 1; }
   .progress-name { font-size: 13px; font-weight: 500; color: #c8ead6; }
   .progress-count { font-size: 11px; color: #6a9878; margin-top: 2px; }
   .progress-bar-wrap { width: 60px; }
-  .progress-bar-bg { background: #0d1f18; border-radius: 4px; height: 4px; overflow: hidden; }
-  .progress-bar-fill { background: #4dcc8a; height: 4px; border-radius: 4px; }
-  .progress-pct { font-size: 10px; color: #4dcc8a; font-family: 'Space Mono', monospace; text-align: right; margin-top: 3px; }
+  .progress-bar-bg { background: #002B5B; border-radius: 4px; height: 4px; overflow: hidden; }
+  .progress-bar-fill { background: #FFD700; height: 4px; border-radius: 4px; }
+  .progress-pct { font-size: 10px; color: #FFD700; font-family: 'Space Mono', monospace; text-align: right; margin-top: 3px; }
 
   .btn-continue {
     width: 100%; margin-top: 14px;
-    background: rgba(77,204,138,0.1); border: 0.5px solid rgba(77,204,138,0.35);
-    border-radius: 8px; padding: 11px; color: #4dcc8a;
+    background: rgba(255, 215, 0, 0.1); border: 0.5px solid #FFD700;
+    border-radius: 8px; padding: 11px; color: #FFD700;
     font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
   }
-  .btn-continue:hover { background: rgba(77,204,138,0.18); }
+  .btn-continue:hover { background: rgba(255, 215, 0, 0.18); }
 
   /* ── LESSONS SCREEN ── */
   .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
   .cat-card {
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.15);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.15);
     border-radius: 12px; padding: 18px 14px; cursor: pointer; transition: border-color 0.15s;
   }
-  .cat-card:hover { border-color: #4dcc8a; }
+  .cat-card:hover { border-color: #40E0D0; }
   .cat-card .cat-emoji { font-size: 22px; margin-bottom: 8px; }
   .cat-card .cat-name { font-size: 13px; font-weight: 700; color: #c8ead6; margin-bottom: 3px; }
   .cat-card .cat-count { font-size: 11px; color: #6a9878; }
   .cat-card .cat-prog { margin-top: 10px; }
 
   /* ── SIGN LIST ── */
-  #screen-signs { }
   .back-btn {
     display: flex; align-items: center; gap: 6px;
     background: none; border: none; color: #6a9878;
     font-size: 12px; cursor: pointer; margin-bottom: 16px; padding: 0;
     font-family: 'Noto Sans KR', sans-serif;
   }
-  .back-btn:hover { color: #4dcc8a; }
+  .back-btn:hover { color: #40E0D0; }
   .sign-list { display: flex; flex-direction: column; gap: 8px; }
   .sign-item {
     display: flex; align-items: center; gap: 14px;
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.12);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.12);
     border-radius: 10px; padding: 12px 14px; cursor: pointer;
   }
-  .sign-item:hover { border-color: rgba(77,204,138,0.4); }
+  .sign-item:hover { border-color: #40E0D0; }
   .sign-thumb {
-    width: 40px; height: 40px; border-radius: 8px; background: #0d1f18;
+    width: 40px; height: 40px; border-radius: 8px; background: #002B5B;
     display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
   }
   .sign-info { flex: 1; }
@@ -164,8 +182,8 @@
   .sign-status {
     font-size: 10px; padding: 3px 8px; border-radius: 12px;
   }
-  .sign-status.done { background: rgba(77,204,138,0.15); color: #4dcc8a; }
-  .sign-status.todo { background: rgba(106,152,120,0.1); color: #6a9878; }
+  .sign-status.done { background: rgba(64, 224, 208, 0.15); color: #40E0D0; }
+  .sign-status.todo { background: rgba(106, 152, 120, 0.1); color: #6a9878; }
 
   /* ── LEARN SCREEN ── */
   .learn-header { margin-bottom: 18px; }
@@ -173,36 +191,36 @@
   .learn-header p { font-size: 12px; color: #6a9878; }
 
   .demo-frame {
-    background: #0d1f18; border: 0.5px solid rgba(77,204,138,0.2);
+    background: #002B5B; border: 0.5px solid rgba(64, 224, 208, 0.2);
     border-radius: 12px; aspect-ratio: 4/3; display: flex;
     flex-direction: column; align-items: center; justify-content: center;
     margin-bottom: 16px; position: relative; overflow: hidden;
   }
   .demo-placeholder { font-size: 56px; }
   .demo-label {
-    font-size: 11px; color: #4dcc8a; margin-top: 10px;
+    font-size: 11px; color: #40E0D0; margin-top: 10px;
     font-family: 'Space Mono', monospace;
   }
   .demo-badge {
     position: absolute; top: 10px; left: 10px;
-    background: rgba(77,204,138,0.15); border: 0.5px solid rgba(77,204,138,0.3);
-    color: #4dcc8a; font-size: 10px; padding: 3px 8px; border-radius: 12px;
+    background: rgba(64, 224, 208, 0.15); border: 0.5px solid rgba(64, 224, 208, 0.3);
+    color: #40E0D0; font-size: 10px; padding: 3px 8px; border-radius: 12px;
     font-family: 'Space Mono', monospace;
   }
   .learn-desc {
-    background: #132b1e; border-radius: 10px; padding: 14px;
+    background: #001C3D; border-radius: 10px; padding: 14px;
     font-size: 12px; color: #a0c8b0; line-height: 1.7; margin-bottom: 16px;
   }
   .btn-practice {
-    width: 100%; background: #4dcc8a; border: none; border-radius: 8px;
+    width: 100%; background: #40E0D0; border: none; border-radius: 8px;
     padding: 13px; font-family: 'Noto Sans KR', sans-serif;
-    font-size: 14px; font-weight: 700; color: #0a1912; cursor: pointer;
+    font-size: 14px; font-weight: 700; color: #001C3D; cursor: pointer;
   }
   .btn-practice:hover { opacity: 0.85; }
 
   /* ── PRACTICE SCREEN ── */
   .webcam-frame {
-    background: #0d1f18; border: 0.5px solid rgba(77,204,138,0.2);
+    background: #002B5B; border: 0.5px solid rgba(64, 224, 208, 0.2);
     border-radius: 12px; aspect-ratio: 4/3; display: flex;
     flex-direction: column; align-items: center; justify-content: center;
     margin-bottom: 14px; position: relative;
@@ -211,36 +229,37 @@
   .webcam-label { font-size: 11px; color: #6a9878; }
   .mediapipe-badge {
     position: absolute; bottom: 10px; right: 10px;
-    background: rgba(13,31,24,0.85); border: 0.5px solid rgba(77,204,138,0.2);
-    color: #4dcc8a; font-size: 9px; padding: 3px 8px; border-radius: 8px;
+    background: rgba(13, 31, 24, 0.85); border: 0.5px solid rgba(64, 224, 208, 0.2);
+    color: #40E0D0; font-size: 9px; padding: 3px 8px; border-radius: 8px;
     font-family: 'Space Mono', monospace;
   }
   .ref-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .ref-box {
-    flex: 1; background: #132b1e; border-radius: 10px; padding: 12px;
+    flex: 1; background: #001C3D; border-radius: 10px; padding: 12px;
     display: flex; flex-direction: column; align-items: center;
   }
   .ref-box .ref-label { font-size: 10px; color: #6a9878; margin-bottom: 6px; }
   .ref-box .ref-sign { font-size: 30px; }
   .feedback-box {
-    background: #132b1e; border: 0.5px solid rgba(77,204,138,0.15);
+    background: #001C3D; border: 0.5px solid rgba(64, 224, 208, 0.15);
     border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 14px;
   }
   .feedback-box .fb-label { font-size: 11px; color: #6a9878; margin-bottom: 4px; }
-  .feedback-box .fb-val { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; color: #4dcc8a; }
+  .feedback-box .fb-val { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; color: #FFD700; }
   .feedback-box.wrong .fb-val { color: #e07070; }
   .btn-row { display: flex; gap: 8px; }
   .btn-sec {
-    flex: 1; background: rgba(77,204,138,0.1); border: 0.5px solid rgba(77,204,138,0.25);
-    border-radius: 8px; padding: 10px; color: #4dcc8a;
+    flex: 1; background: rgba(64, 224, 208, 0.1); border: 0.5px solid rgba(64, 224, 208, 0.25);
+    border-radius: 8px; padding: 10px; color: #40E0D0;
     font-family: 'Noto Sans KR', sans-serif; font-size: 12px; cursor: pointer;
   }
-  .btn-sec:hover { background: rgba(77,204,138,0.18); }
+  .btn-sec:hover { background: rgba(64, 224, 208, 0.18); }
 </style>
+</head>
+<body>
 
 <div id="app">
 
-  <!-- LOGIN -->
   <div id="screen-login" class="screen active">
     <div class="login-box">
       <h1>수어 학습 플랫폼</h1>
@@ -254,7 +273,6 @@
     </div>
   </div>
 
-  <!-- SIGNUP -->
   <div id="screen-signup" class="screen">
   <div class="content" style="display:flex; align-items:center; justify-content:center;">
     <div class="login-box">
@@ -280,7 +298,6 @@
   </div>
 </div>
 
-  <!-- DASHBOARD -->
   <div id="screen-dashboard" class="screen">
     <div class="topnav">
       <div class="logo">수어 플랫폼</div>
@@ -339,7 +356,6 @@
     </div>
   </div>
 
-  <!-- LESSONS -->
   <div id="screen-lessons" class="screen">
     <div class="topnav">
       <div class="logo">수어 플랫폼</div>
@@ -389,7 +405,6 @@
     </div>
   </div>
 
-  <!-- SIGN LIST -->
   <div id="screen-signs" class="screen">
     <div class="topnav">
       <div class="logo">수어 플랫폼</div>
@@ -407,7 +422,6 @@
     </div>
   </div>
 
-  <!-- LEARN -->
   <div id="screen-learn" class="screen">
     <div class="topnav">
       <div class="logo">수어 플랫폼</div>
@@ -433,7 +447,6 @@
     </div>
   </div>
 
-  <!-- PRACTICE -->
   <div id="screen-practice" class="screen">
     <div class="topnav">
       <div class="logo">수어 플랫폼</div>
@@ -458,7 +471,7 @@
         </div>
         <div class="ref-box" style="flex:2">
           <div class="ref-label">손 인식 상태</div>
-          <div style="font-size:12px;color:#4dcc8a;font-family:'Space Mono',monospace;margin-top:4px">대기 중...</div>
+          <div style="font-size:12px;color:#40E0D0;font-family:'Space Mono',monospace;margin-top:4px">대기 중...</div>
           <div style="font-size:10px;color:#6a9878;margin-top:4px">손을 카메라에 보여주세요</div>
         </div>
       </div>
@@ -552,7 +565,7 @@
     val.textContent = score + '%';
     if (score >= 80) {
       box.className = 'feedback-box';
-      val.style.color = '#4dcc8a';
+      val.style.color = '#FFD700';
       val.textContent = '✓ 정답! ' + score + '%';
     } else {
       box.className = 'feedback-box wrong';
@@ -562,23 +575,24 @@
   }
 
   function handleSignUp() {
-  const name = document.getElementById('signup-name').value;
-  const email = document.getElementById('signup-email').value;
-  const pw = document.getElementById('signup-pw').value;
-  const pwConfirm = document.getElementById('signup-pw-confirm').value;
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-email').value;
+    const pw = document.getElementById('signup-pw').value;
+    const pwConfirm = document.getElementById('signup-pw-confirm').value;
 
-  if (!name || !email || !pw) {
-    alert("모든 필드를 채워주세요! (Please fill all fields)");
-    return;
+    if (!name || !email || !pw) {
+      alert("모든 필드를 채워주세요! (Please fill all fields)");
+      return;
+    }
+
+    if (pw !== pwConfirm) {
+      alert("비밀번호가 일치하지 않습니다. (Passwords do not match)");
+      return;
+    }
+
+    alert(`${name}님, 환영합니다! 가입이 완료되었습니다.`);
+    goTo('login');
   }
-
-  if (pw !== pwConfirm) {
-    alert("비밀번호가 일치하지 않습니다. (Passwords do not match)");
-    return;
-  }
-
-  alert(`${name}님, 환영합니다! 가입이 완료되었습니다.`);
-  goTo('login'); // Redirect to login after successful "registration"
-}
-
 </script>
+</body>
+</html>
