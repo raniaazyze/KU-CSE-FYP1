@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수어 학습 플랫폼 v2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #001C3D;
+  --navy-mid: #002B5B;
+  --navy-light: #003875;
+  --teal: #40E0D0;
+  --teal-dim: rgba(64,224,208,0.15);
+  --teal-border: rgba(64,224,208,0.25);
+  --yellow: #FFD700;
+  --yellow-dim: rgba(255,215,0,0.12);
+  --yellow-border: rgba(255,215,0,0.4);
+  --green-ok: #2ECC71;
+  --green-ok-dim: rgba(46,204,113,0.15);
+  --red-err: #E74C3C;
+  --red-err-dim: rgba(231,76,60,0.15);
+  --text-bright: #F0FAF5;
+  --text-mid: #9EC4B0;
+  --text-dim: #5A7A68;
+  --border-faint: rgba(64,224,208,0.12);
+  --border-mid: rgba(64,224,208,0.25);
+  --mono: 'DM Mono', monospace;
+  --sans: 'Noto Sans KR', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+body { background: var(--navy); color: var(--text-bright); font-family: var(--sans); min-height: 100vh; }
+
+/* ── SCREEN SYSTEM ── */
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
+
+/* ── TOPNAV ── */
+.topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--navy);
+  border-bottom: 1px solid var(--border-faint);
+  position: sticky; top: 0; z-index: 10;
+}
+.logo {
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
+  color: var(--teal); letter-spacing: 0.06em;
+}
+.nav-links { display: flex; gap: 4px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: none; color: var(--text-dim);
+  font-family: var(--sans); font-size: 12px; padding: 6px 10px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s;
+}
+.nav-btn .nav-icon { font-size: 14px; }
+.nav-btn:hover { background: var(--teal-dim); color: var(--teal); }
+.nav-btn.active { background: var(--teal-dim); color: var(--teal); }
+.avatar-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--teal-dim); border: 1.5px solid var(--teal-border);
+  color: var(--teal); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 20px 20px 40px; }
+
+/* ── LOGIN ── */
+#screen-login { align-items: center; justify-content: center; background: var(--navy); }
+#screen-login.active { display: flex; }
+.login-wrap { width: 100%; max-width: 380px; }
+.login-hero {
+  text-align: center; margin-bottom: 28px;
+}
+.login-hero .hero-icon {
+  font-size: 52px; display: block; margin-bottom: 10px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.login-hero h1 {
+  font-size: 22px; font-weight: 900; color: var(--text-bright); margin-bottom: 4px;
+}
+.login-hero p { font-size: 13px; color: var(--text-dim); }
+.login-card {
+  background: var(--navy-mid); border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg); padding: 28px 24px;
+}
+.field-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.field-input {
+  width: 100%; background: var(--navy); border: 1.5px solid var(--border-faint);
+  border-radius: var(--radius-sm); padding: 11px 14px; color: var(--text-bright);
+  font-family: var(--sans); font-size: 14px; margin-bottom: 14px; outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: var(--teal); }
+.btn-primary {
+  width: 100%; background: var(--yellow); border: none; border-radius: var(--radius-sm);
+  padding: 13px; font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: var(--navy); cursor: pointer; transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:hover { opacity: 0.88; }
+.login-switch { text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-dim); }
+.login-switch span { color: var(--teal); cursor: pointer; text-decoration: underline; }
+
+/* ── VISUAL FEEDBACK TOAST ── */
+.vfb-toast {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px 20px; font-size: 15px; font-weight: 700;
+  transform: translateY(-100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+}
+.vfb-toast.show { transform: translateY(0); }
+.vfb-toast.success { background: var(--green-ok); color: #fff; }
+.vfb-toast.error { background: var(--red-err); color: #fff; }
+.vfb-toast.info { background: var(--teal); color: var(--navy); }
+
+/* ── DASHBOARD ── */
+.greeting-block { margin-bottom: 20px; }
+.greeting { font-size: 20px; font-weight: 900; color: var(--text-bright); margin-bottom: 3px; }
+.greeting-sub { font-size: 12px; color: var(--text-dim); }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 14px 10px; text-align: center;
+  transition: border-color 0.15s;
+}
+.stat-card:hover { border-color: var(--teal-border); }
+.stat-icon { font-size: 20px; margin-bottom: 6px; }
+.stat-val { font-family: var(--mono); font-size: 24px; font-weight: 500; color: var(--yellow); line-height: 1; }
+.stat-lbl { font-size: 10px; color: var(--text-dim); margin-top: 4px; line-height: 1.4; }
+
+.section-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--teal); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-faint); }
+
+.progress-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+}
+.progress-item::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px; background: var(--teal); opacity: 0; transition: opacity 0.15s;
+}
+.progress-item:hover { border-color: var(--teal-border); }
+.progress-item:hover::before { opacity: 1; }
+.progress-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-sm);
+  background: var(--navy); border: 1px solid var(--border-faint);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.progress-info { flex: 1; }
+.progress-name { font-size: 13px; font-weight: 700; color: var(--text-bright); }
+.progress-count { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.progress-right { text-align: right; min-width: 50px; }
+.progress-pct { font-family: var(--mono); font-size: 13px; color: var(--yellow); font-weight: 500; }
+.bar-bg { background: var(--navy); border-radius: 4px; height: 5px; overflow: hidden; margin-top: 5px; }
+.bar-fill { height: 5px; border-radius: 4px; background: var(--yellow); transition: width 0.6s ease; }
+
+.btn-all {
+  width: 100%; margin-top: 10px;
+  background: transparent; border: 1px solid var(--teal-border);
+  border-radius: var(--radius-sm); padding: 12px;
+  color: var(--teal); font-family: var(--sans); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s;
+}
+.btn-all:hover { background: var(--teal-dim); }
+
+/* ── CATEGORY GRID ── */
+.cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.cat-card {
+  background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 18px 14px; cursor: pointer;
+  transition: all 0.15s; position: relative; overflow: hidden;
+}
+.cat-card:hover { border-color: var(--teal-border); transform: translateY(-1px); }
+.cat-card:active { transform: translateY(0); }
+.cat-emoji { font-size: 28px; margin-bottom: 10px; display: block; }
+.cat-name { font-size: 13px; font-weight: 700; color: var(--text-bright); margin-bottom: 3px; }
+.cat-sub { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+.cat-badge {
+  display: inline-block; font-size: 10px; padding: 2px 8px;
+  border-radius: 20px; font-family: var(--mono);
+}
+.cat-badge.started { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow-border); }
+.cat-badge.notstarted { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-border); }
+
+/* ── SIGN LIST ── */
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--text-dim);
+  font-size: 12px; cursor: pointer; margin-bottom: 18px;
+  padding: 6px 0; font-family: var(--sans); transition: color 0.15s;
+}
+.back-btn:hover { color: var(--teal); }
+.sign-list { display: flex; flex-direction: column; gap: 8px; }
+.sign-item {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 14px 16px; cursor: pointer;
+  transition: all 0.15s;
+}
+.sign-item:hover { border-color: var(--teal-border); }
+.sign-thumb {
+  width: 48px; height: 48px; border-radius: var(--radius-sm);
+  background: var(--navy); border: 1px solid var(--border-faint);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.sign-info { flex: 1; }
+.sign-name { font-size: 14px; font-weight: 700; color: var(--text-bright); }
+.sign-diff { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.sign-status-badge {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  font-family: var(--mono); white-space: nowrap;
+}
+.sign-status-badge.done {
+  background: var(--green-ok-dim); color: var(--green-ok);
+  border: 1px solid rgba(46,204,113,0.3);
+}
+.sign-status-badge.todo {
+  background: var(--teal-dim); color: var(--text-dim);
+  border: 1px solid var(--border-faint);
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.status-dot.done { background: var(--green-ok); }
+.status-dot.todo { background: var(--text-dim); }
+
+/* ── LEARN SCREEN ── */
+.learn-title-row { margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+.learn-title { font-size: 24px; font-weight: 900; color: var(--text-bright); }
+.learn-meta { font-size: 11px; color: var(--text-dim); margin-bottom: 18px; }
+
+.demo-frame {
+  background: var(--navy-mid); border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg); aspect-ratio: 4/3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.demo-emoji { font-size: 64px; animation: float 2.5s ease-in-out infinite; }
+.demo-label {
+  font-size: 11px; color: var(--teal); margin-top: 12px;
+  font-family: var(--mono); letter-spacing: 0.05em;
+}
+.mode-badge {
+  position: absolute; top: 10px; left: 10px;
+  background: var(--teal-dim); border: 1px solid var(--teal-border);
+  color: var(--teal); font-size: 10px; padding: 3px 10px;
+  border-radius: 20px; font-family: var(--mono);
+}
+
+/* ── KEY VISUAL FEEDBACK AREA ── */
+.vfb-banner {
+  border-radius: var(--radius-md); padding: 16px 18px;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 14px;
+  border: 2px solid transparent; transition: all 0.3s;
+}
+.vfb-banner.neutral {
+  background: var(--navy-mid); border-color: var(--border-faint);
+}
+.vfb-banner.success {
+  background: var(--green-ok-dim); border-color: rgba(46,204,113,0.5);
+  animation: pulse-green 0.4s ease;
+}
+.vfb-banner.fail {
+  background: var(--red-err-dim); border-color: rgba(231,76,60,0.5);
+  animation: shake 0.4s ease;
+}
+@keyframes pulse-green {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.vfb-icon-big { font-size: 36px; flex-shrink: 0; }
+.vfb-text-block { flex: 1; }
+.vfb-headline { font-size: 18px; font-weight: 900; }
+.vfb-headline.neutral { color: var(--text-dim); }
+.vfb-headline.success { color: var(--green-ok); }
+.vfb-headline.fail { color: var(--red-err); }
+.vfb-sub { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.vfb-score {
+  font-family: var(--mono); font-size: 32px; font-weight: 500;
+  flex-shrink: 0;
+}
+.vfb-score.neutral { color: var(--text-dim); }
+.vfb-score.success { color: var(--green-ok); }
+.vfb-score.fail { color: var(--red-err); }
+
+/* ── PRACTICE ── */
+.webcam-frame {
+  background: var(--navy-mid); border: 1px solid var(--border-mid);
+  border-radius: var(--radius-lg); aspect-ratio: 4/3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin-bottom: 14px; position: relative; overflow: hidden;
+}
+.webcam-icon { font-size: 40px; margin-bottom: 8px; }
+.webcam-hint { font-size: 12px; color: var(--text-dim); }
+.mediapipe-tag {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,28,61,0.85); border: 1px solid var(--border-faint);
+  color: var(--teal); font-size: 9px; padding: 3px 9px;
+  border-radius: var(--radius-sm); font-family: var(--mono);
+}
+
+/* ── HINT BOX ── */
+.hint-box {
+  background: var(--yellow-dim); border: 1px solid var(--yellow-border);
+  border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 14px;
+  display: none;
+}
+.hint-box.visible { display: flex; gap: 10px; align-items: flex-start; }
+.hint-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.hint-text { font-size: 12px; color: var(--yellow); line-height: 1.6; }
+.hint-title { font-weight: 700; margin-bottom: 3px; font-size: 13px; }
+
+/* ── REF ROW ── */
+.ref-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.ref-box {
+  flex: 1; background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 14px 12px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.ref-label { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ref-sign { font-size: 32px; }
+
+/* ── ATTEMPT TRACKER ── */
+.attempt-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.attempt-label { font-size: 11px; color: var(--text-dim); }
+.attempt-dots { display: flex; gap: 6px; }
+.attempt-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--navy); border: 1.5px solid var(--border-mid);
+  transition: all 0.2s;
+}
+.attempt-dot.fail { background: var(--red-err); border-color: var(--red-err); }
+.attempt-dot.pass { background: var(--green-ok); border-color: var(--green-ok); }
+
+/* ── BUTTONS ROW ── */
+.btn-row { display: flex; gap: 8px; }
+.btn-capture {
+  flex: 2; background: var(--teal); border: none; border-radius: var(--radius-sm);
+  padding: 13px; color: var(--navy); font-family: var(--sans);
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-capture:hover { opacity: 0.85; }
+.btn-sec {
+  flex: 1; background: transparent; border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm); padding: 13px; color: var(--text-mid);
+  font-family: var(--sans); font-size: 12px; cursor: pointer; transition: all 0.15s;
+}
+.btn-sec:hover { background: var(--teal-dim); color: var(--teal); border-color: var(--teal-border); }
+
+/* ── LEARN DESC ── */
+.learn-desc {
+  background: var(--navy-mid); border-left: 3px solid var(--teal);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 16px; font-size: 13px; color: var(--text-mid);
+  line-height: 1.75; margin-bottom: 16px;
+}
+
+.btn-practice {
+  width: 100%; background: var(--teal); border: none; border-radius: var(--radius-sm);
+  padding: 14px; font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: var(--navy); cursor: pointer; transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-practice:hover { opacity: 0.85; }
+
+/* ── SIGNUP ── */
+#screen-signup .content { display: flex; align-items: center; justify-content: center; }
+
+/* ── ADMIN DASHBOARD ── */
+.admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.admin-card {
+  background: var(--navy-mid); border: 1px solid var(--border-faint);
+  border-radius: var(--radius-md); padding: 16px 14px; cursor: pointer;
+  transition: all 0.15s;
+}
+.admin-card:hover { border-color: var(--teal-border); }
+.admin-card-icon { font-size: 22px; margin-bottom: 8px; }
+.admin-card-title { font-size: 13px; font-weight: 700; color: var(--text-bright); }
+.admin-card-sub { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+/* ── ROLE SELECT (login) ── */
+.role-toggle {
+  display: flex; gap: 8px; margin-bottom: 18px;
+}
+.role-btn {
+  flex: 1; padding: 9px; border-radius: var(--radius-sm);
+  background: var(--navy); border: 1.5px solid var(--border-faint);
+  color: var(--text-dim); font-family: var(--sans); font-size: 12px;
+  cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.role-btn.selected {
+  background: var(--teal-dim); border-color: var(--teal);
+  color: var(--teal); font-weight: 700;
+}
+</style>
+</head>
+<body>
+
+<!-- VISUAL FEEDBACK TOAST (global) -->
+<div class="vfb-toast" id="vfb-toast"></div>
+
+<div id="app">
+
+<!-- ══ LOGIN ══ -->
+<div id="screen-login" class="screen active">
+  <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div class="login-wrap">
+      <div class="login-hero">
+        <span class="hero-icon">🤟</span>
+        <h1>수어 학습 플랫폼</h1>
+        <p>Sign Language Learning Platform</p>
+      </div>
+      <div class="login-card">
+        <div class="role-toggle">
+          <div class="role-btn selected" id="role-user" onclick="selectRole('user')">👤 학습자 / Learner</div>
+          <div class="role-btn" id="role-admin" onclick="selectRole('admin')">🛡 관리자 / Admin</div>
+        </div>
+        <div class="field-label">이메일 또는 이름 / Email or Name</div>
+        <input class="field-input" type="email" placeholder="your@email.com" id="login-email"/>
+        <div class="field-label">비밀번호 / Password</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="login-pw"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="btn-primary" onclick="doLogin()">
+          <span>로그인</span><span>/ Login</span>
+        </button>
+        <div class="login-switch">계정 없음? <span onclick="goTo('signup')">회원가입 / Register</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIGNUP ══ -->
+<div id="screen-signup" class="screen">
+  <div class="content">
+    <div class="login-wrap" style="max-width:380px; width:100%;">
+      <div class="login-card">
+        <button class="back-btn" onclick="goTo('login')">← 로그인으로 / Back to Login</button>
+        <h2 style="font-size:18px;font-weight:900;color:var(--text-bright);margin-bottom:4px;">회원가입</h2>
+        <p style="font-size:12px;color:var(--text-dim);margin-bottom:20px;">Join the platform</p>
+        <div class="field-label">이름 / Name</div>
+        <input class="field-input" type="text" placeholder="홍길동" id="signup-name"/>
+        <div class="field-label">이메일 / Email</div>
+        <input class="field-input" type="email" placeholder="your@email.com" id="signup-email"/>
+        <div class="field-label">비밀번호 / Password</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="signup-pw"/>
+        <div class="field-label">비밀번호 확인 / Confirm</div>
+        <input class="field-input" type="password" placeholder="••••••••" id="signup-confirm"/>
+        <button class="btn-primary" onclick="doSignUp()">가입하기 / Register</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD (USER) ══ -->
+<div id="screen-dashboard" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
+      <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
+      <button class="nav-btn" onclick="goTo('progress')"><span class="nav-icon">📊</span>진행도</button>
+    </div>
+    <div class="avatar-btn" id="dash-avatar" onclick="goTo('dashboard')">유</div>
+  </div>
+  <div class="content">
+    <div class="greeting-block">
+      <div class="greeting" id="dash-greeting">안녕하세요! 👋</div>
+      <div class="greeting-sub">오늘도 수어를 연습해볼까요? / Ready to practice today?</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-icon">🤟</div>
+        <div class="stat-val">12</div>
+        <div class="stat-lbl">학습한 수어<br>Signs Learned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-val">87%</div>
+        <div class="stat-lbl">평균 점수<br>Avg Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-val">5</div>
+        <div class="stat-lbl">연속 학습일<br>Day Streak</div>
+      </div>
+    </div>
+    <div class="section-title">카테고리별 진행도 / Progress by Category</div>
+    <div class="progress-item" onclick="showCategory('지문자')">
+      <div class="progress-icon">🤟</div>
+      <div class="progress-info">
+        <div class="progress-name">기본 손가락 철자 / Fingerspelling</div>
+        <div class="progress-count">10 / 26 완료</div>
+      </div>
+      <div class="progress-right">
+        <div class="progress-pct">38%</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:38%"></div></div>
+      </div>
+    </div>
+    <div class="progress-item" onclick="showCategory('숫자')">
+      <div class="progress-icon">✌️</div>
+      <div class="progress-info">
+        <div class="progress-name">숫자 / Numbers</div>
+        <div class="progress-count">7 / 10 완료</div>
+      </div>
+      <div class="progress-right">
+        <div class="progress-pct">70%</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:70%"></div></div>
+      </div>
+    </div>
+    <div class="progress-item" onclick="showCategory('인사')">
+      <div class="progress-icon">👋</div>
+      <div class="progress-info">
+        <div class="progress-name">인사 / Greetings</div>
+        <div class="progress-count">0 / 8 완료</div>
+      </div>
+      <div class="progress-right">
+        <div class="progress-pct">0%</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <button class="btn-all" onclick="goTo('lessons')">모든 레슨 보기 / View All Lessons →</button>
+  </div>
+</div>
+
+<!-- ══ PROGRESS SCREEN ══ -->
+<div id="screen-progress" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
+      <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
+      <button class="nav-btn active" onclick="goTo('progress')"><span class="nav-icon">📊</span>진행도</button>
+    </div>
+    <div class="avatar-btn">유</div>
+  </div>
+  <div class="content">
+    <div class="section-title">나의 학습 현황 / My Learning Stats</div>
+    <div class="stat-row" style="margin-bottom:20px;">
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">12</div><div class="stat-lbl">완료 수어<br>Completed</div></div>
+      <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-val">47</div><div class="stat-lbl">남은 수어<br>Remaining</div></div>
+      <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-val">87%</div><div class="stat-lbl">최고 점수<br>Best Score</div></div>
+    </div>
+    <div class="section-title">완료한 수어 목록 / Completed Signs</div>
+    <div class="sign-list">
+      <div class="sign-item"><div class="sign-thumb">✊</div><div class="sign-info"><div class="sign-name">A (지문자)</div><div class="sign-diff">점수: 92% · 쉬움</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>완료</div></div>
+      <div class="sign-item"><div class="sign-thumb">🖐</div><div class="sign-info"><div class="sign-name">B (지문자)</div><div class="sign-diff">점수: 88% · 쉬움</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>완료</div></div>
+      <div class="sign-item"><div class="sign-thumb">☝️</div><div class="sign-info"><div class="sign-name">1 (숫자)</div><div class="sign-diff">점수: 95% · 쉬움</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>완료</div></div>
+    </div>
+    <button class="btn-all" style="margin-top:14px;" onclick="goTo('lessons')">계속 학습하기 / Continue Learning →</button>
+  </div>
+</div>
+
+<!-- ══ ADMIN DASHBOARD ══ -->
+<div id="screen-admin" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links">
+      <button class="nav-btn active">🛡 관리자</button>
+    </div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <div class="greeting-block">
+      <div class="greeting">관리자 대시보드 🛡</div>
+      <div class="greeting-sub">Admin Dashboard / 시스템 관리</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val">24</div><div class="stat-lbl">총 사용자<br>Total Users</div></div>
+      <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val">59</div><div class="stat-lbl">총 레슨<br>Total Lessons</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-val">73%</div><div class="stat-lbl">완료율<br>Completion</div></div>
+    </div>
+    <div class="section-title">관리 메뉴 / Management</div>
+    <div class="admin-grid">
+      <div class="admin-card" onclick="showToast('레슨 관리 페이지 / Lesson Manager', 'info')">
+        <div class="admin-card-icon">➕</div>
+        <div class="admin-card-title">새 수어 추가</div>
+        <div class="admin-card-sub">Add New Sign/Lesson</div>
+      </div>
+      <div class="admin-card" onclick="showToast('수어 편집 / Edit Sign', 'info')">
+        <div class="admin-card-icon">✏️</div>
+        <div class="admin-card-title">수어/레슨 수정</div>
+        <div class="admin-card-sub">Edit Sign/Lesson</div>
+      </div>
+      <div class="admin-card" onclick="showToast('삭제 확인 필요 / Deletion requires confirm', 'error')">
+        <div class="admin-card-icon">🗑</div>
+        <div class="admin-card-title">수어/레슨 삭제</div>
+        <div class="admin-card-sub">Delete Sign/Lesson</div>
+      </div>
+      <div class="admin-card" onclick="showToast('사용자 진행도 보기 / User Progress', 'info')">
+        <div class="admin-card-icon">📊</div>
+        <div class="admin-card-title">사용자 진행 현황</div>
+        <div class="admin-card-sub">View All Progress</div>
+      </div>
+    </div>
+    <button class="btn-all" onclick="doLogout()" style="border-color:rgba(231,76,60,0.4);color:#E74C3C;">🚪 로그아웃 / Logout</button>
+  </div>
+</div>
+
+<!-- ══ LESSONS ══ -->
+<div id="screen-lessons" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
+      <button class="nav-btn active" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
+      <button class="nav-btn" onclick="goTo('progress')"><span class="nav-icon">📊</span>진행도</button>
+    </div>
+    <div class="avatar-btn">유</div>
+  </div>
+  <div class="content">
+    <div class="section-title">카테고리 선택 / Choose Category</div>
+    <div class="cat-grid">
+      <div class="cat-card" onclick="showCategory('지문자')">
+        <span class="cat-emoji">🤟</span>
+        <div class="cat-name">기본 손가락 철자</div>
+        <div class="cat-sub">Fingerspelling · 26개</div>
+        <span class="cat-badge started">38% 완료</span>
+        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:38%"></div></div>
+      </div>
+      <div class="cat-card" onclick="showCategory('숫자')">
+        <span class="cat-emoji">✌️</span>
+        <div class="cat-name">숫자</div>
+        <div class="cat-sub">Numbers · 10개</div>
+        <span class="cat-badge started">70% 완료</span>
+        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:70%"></div></div>
+      </div>
+      <div class="cat-card" onclick="showCategory('인사')">
+        <span class="cat-emoji">👋</span>
+        <div class="cat-name">인사</div>
+        <div class="cat-sub">Greetings · 8개</div>
+        <span class="cat-badge notstarted">미시작</span>
+        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:0%"></div></div>
+      </div>
+      <div class="cat-card" onclick="showCategory('일상')">
+        <span class="cat-emoji">💬</span>
+        <div class="cat-name">일상 표현</div>
+        <div class="cat-sub">Daily · 15개</div>
+        <span class="cat-badge notstarted">미시작</span>
+        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SIGN LIST ══ -->
+<div id="screen-signs" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
+    </div>
+    <div class="avatar-btn">유</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('lessons')">← 카테고리 / Categories</button>
+    <div class="section-title" id="signs-title">수어 목록 / Sign List</div>
+    <div class="sign-list" id="sign-list-container"></div>
+  </div>
+</div>
+
+<!-- ══ LEARN ══ -->
+<div id="screen-learn" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
+    </div>
+    <div class="avatar-btn">유</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" id="learn-back-btn">← 목록 / List</button>
+    <div class="learn-title-row">
+      <div class="learn-title" id="learn-sign-name">HELLO</div>
+    </div>
+    <div class="learn-meta" id="learn-sign-sub">인사 표현 · 난이도: 쉬움 / Greetings · Easy</div>
+    <div class="demo-frame">
+      <div class="mode-badge">학습 모드 / Learn</div>
+      <div class="demo-emoji" id="learn-emoji">👋</div>
+      <div class="demo-label">▶ 시연 영상/이미지 영역 / Demo Area</div>
+    </div>
+    <div class="learn-desc" id="learn-desc">손을 위로 들어 좌우로 흔드세요. 상대방을 향해 밝게 인사하는 동작입니다.</div>
+    <button class="btn-practice" onclick="goTo('practice')">
+      <span>연습 시작하기</span><span style="opacity:0.7;">/ Start Practice →</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ PRACTICE ══ -->
+<div id="screen-practice" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="goTo('learn')"><span class="nav-icon">📖</span>학습</button>
+    </div>
+    <div class="avatar-btn">유</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" id="practice-back-btn">← 학습으로 / Back to Learn</button>
+    <div class="section-title" id="practice-title">연습 / Practice: HELLO</div>
+
+    <div class="webcam-frame">
+      <div class="webcam-icon">📷</div>
+      <div class="webcam-hint">웹캠 피드 영역 / Webcam Feed (MediaPipe)</div>
+      <div class="mediapipe-tag">MediaPipe ready</div>
+    </div>
+
+    <!-- ATTEMPT TRACKER -->
+    <div class="attempt-row">
+      <div class="attempt-label">시도 기록 / Attempts</div>
+      <div class="attempt-dots" id="attempt-dots">
+        <div class="attempt-dot" id="dot-0"></div>
+        <div class="attempt-dot" id="dot-1"></div>
+        <div class="attempt-dot" id="dot-2"></div>
+      </div>
+    </div>
+
+    <!-- HINT BOX (shows after 3 fails) -->
+    <div class="hint-box" id="hint-box">
+      <div class="hint-icon">💡</div>
+      <div class="hint-text">
+        <div class="hint-title">힌트 / Hint</div>
+        <span id="hint-content">손의 위치를 조정해보세요 / Try adjusting your hand position</span>
+      </div>
+    </div>
+
+    <div class="ref-row">
+      <div class="ref-box">
+        <div class="ref-label">기준 수어 / Reference</div>
+        <div class="ref-sign" id="practice-emoji">👋</div>
+      </div>
+      <div class="ref-box" style="flex:2">
+        <div class="ref-label">손 인식 상태 / Hand Status</div>
+        <div style="font-size:13px;color:var(--teal);font-family:var(--mono);margin-top:4px;" id="hand-status">대기 중... / Waiting</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">손을 카메라에 보여주세요 / Show your hand</div>
+      </div>
+    </div>
+
+    <!-- BIG VISUAL FEEDBACK BANNER -->
+    <div class="vfb-banner neutral" id="vfb-banner">
+      <div class="vfb-icon-big" id="vfb-icon">🤲</div>
+      <div class="vfb-text-block">
+        <div class="vfb-headline neutral" id="vfb-headline">준비 완료 / Ready</div>
+        <div class="vfb-sub" id="vfb-sub">캡처 버튼을 눌러 분석하세요 / Press capture to analyze</div>
+      </div>
+      <div class="vfb-score neutral" id="vfb-score">—</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-capture" onclick="doCapture()">
+        📸 캡처 / Capture
+      </button>
+      <button class="btn-sec" onclick="resetPractice()">↺ 리셋</button>
+      <button class="btn-sec" onclick="goTo('learn')">← 학습</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+const signs = {
+  '지문자': [
+    {name:'A', emoji:'✊', diff:'쉬움', done:true, desc:'손을 주먹 쥐고 엄지를 옆으로 세웁니다. / Make a fist with thumb pointing sideways.', hint:'엄지가 옆을 향해야 해요 / Thumb should point to the side'},
+    {name:'B', emoji:'🖐', diff:'쉬움', done:true, desc:'손가락 네 개를 붙여 위로 펴고 엄지는 접습니다. / Extend four fingers together, tuck thumb.', hint:'손가락을 붙여주세요 / Keep fingers together'},
+    {name:'C', emoji:'🤏', diff:'쉬움', done:false, desc:'손을 C 모양으로 둥글게 만듭니다. / Curve your hand into a C shape.', hint:'손바닥이 옆을 향해야 해요 / Palm faces sideways'},
+    {name:'D', emoji:'👆', diff:'보통', done:false, desc:'검지만 세우고 나머지는 엄지와 연결합니다. / Raise index finger, connect others to thumb.', hint:'검지만 세우세요 / Only index finger up'},
+    {name:'E', emoji:'🤙', diff:'보통', done:false, desc:'손가락을 구부려 손바닥 방향으로 접습니다. / Bend fingers toward the palm.', hint:'모든 손가락을 구부리세요 / Curl all fingers'},
+  ],
+  '숫자': [
+    {name:'1', emoji:'☝️', diff:'쉬움', done:true, desc:'검지 손가락만 펴서 위를 가리킵니다. / Extend only the index finger pointing up.', hint:'검지만 펴세요 / Only index finger extended'},
+    {name:'2', emoji:'✌️', diff:'쉬움', done:true, desc:'검지와 중지 두 손가락을 펴서 V자를 만듭니다. / Extend index and middle finger in a V shape.', hint:'두 손가락을 V자로 / Two fingers in a V'},
+    {name:'3', emoji:'🤟', diff:'쉬움', done:true, desc:'엄지, 검지, 중지 세 손가락을 펩니다. / Extend thumb, index, and middle finger.', hint:'세 손가락을 펴세요 / Three fingers extended'},
+    {name:'4', emoji:'🖐', diff:'보통', done:true, desc:'엄지를 제외한 네 손가락을 폅니다. / Extend four fingers, keep thumb down.', hint:'엄지만 접으세요 / Only thumb folded'},
+    {name:'5', emoji:'✋', diff:'쉬움', done:true, desc:'다섯 손가락을 모두 펍니다. / Extend all five fingers.', hint:'모든 손가락을 펴세요 / All fingers extended'},
+  ],
+  '인사': [
+    {name:'안녕하세요', emoji:'👋', diff:'쉬움', done:false, desc:'손을 위로 들어 좌우로 흔드세요. / Raise your hand and wave side to side.', hint:'손을 더 크게 흔들어보세요 / Wave your hand more widely'},
+    {name:'감사합니다', emoji:'🙏', diff:'쉬움', done:false, desc:'두 손을 모아 앞으로 내밀며 고개를 숙입니다. / Bring both hands together and bow slightly.', hint:'두 손을 모아주세요 / Bring both hands together'},
+    {name:'반갑습니다', emoji:'🤝', diff:'보통', done:false, desc:'오른손을 가슴 앞으로 가져와 악수하는 동작을 합니다. / Bring right hand to chest in a handshake motion.', hint:'가슴 높이에서 동작하세요 / Move at chest height'},
+  ],
+  '일상': [
+    {name:'이름', emoji:'🏷️', diff:'쉬움', done:false, desc:'검지 두 개를 교차합니다. / Cross both index fingers.', hint:'두 검지를 교차시키세요 / Cross both index fingers'},
+    {name:'밥', emoji:'🍚', diff:'보통', done:false, desc:'손을 입 방향으로 가져갑니다. / Bring hand toward mouth.', hint:'손을 입쪽으로 / Bring hand to mouth'},
+    {name:'물', emoji:'💧', diff:'쉬움', done:false, desc:'W 손 모양으로 입 근처에서 아래로 내립니다. / Make W shape and move down from mouth.', hint:'W 모양을 만드세요 / Make W shape'},
+  ]
+};
+
+let currentCategory = '인사';
+let currentSign = null;
+let currentRole = 'user';
+let attemptCount = 0;
+let failCount = 0;
+
+function selectRole(role) {
+  currentRole = role;
+  document.getElementById('role-user').className = 'role-btn' + (role==='user'?' selected':'');
+  document.getElementById('role-admin').className = 'role-btn' + (role==='admin'?' selected':'');
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-pw').value;
+  if (!email || !pw) {
+    showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return;
+  }
+  if (currentRole === 'admin') {
+    showToast('관리자로 로그인 / Admin logged in', 'success');
+    setTimeout(() => goTo('admin'), 600);
+  } else {
+    showToast('로그인 성공! / Login successful!', 'success');
+    setTimeout(() => goTo('dashboard'), 600);
+  }
+}
+
+function doSignUp() {
+  const name = document.getElementById('signup-name').value;
+  const email = document.getElementById('signup-email').value;
+  const pw = document.getElementById('signup-pw').value;
+  const confirm = document.getElementById('signup-confirm').value;
+  if (!name||!email||!pw) { showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return; }
+  if (pw !== confirm) { showToast('비밀번호 불일치 / Passwords do not match', 'error'); return; }
+  showToast(name + '님 환영합니다! / Welcome!', 'success');
+  setTimeout(() => goTo('login'), 900);
+}
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+}
+
+function showCategory(cat) {
+  currentCategory = cat;
+  const list = signs[cat] || [];
+  document.getElementById('signs-title').textContent = cat + ' — 수어 목록 / Signs';
+  const c = document.getElementById('sign-list-container');
+  c.innerHTML = list.map((s, i) => `
+    <div class="sign-item" onclick="showLearn(${i})">
+      <div class="sign-thumb">${s.emoji}</div>
+      <div class="sign-info">
+        <div class="sign-name">${s.name}</div>
+        <div class="sign-diff">난이도: ${s.diff} / ${s.diff==='쉬움'?'Easy':'Medium'}</div>
+      </div>
+      <div class="sign-status-badge ${s.done?'done':'todo'}">
+        <div class="status-dot ${s.done?'done':'todo'}"></div>
+        ${s.done?'완료 / Done':'미시작 / Todo'}
+      </div>
+    </div>`).join('');
+  goTo('signs');
+}
+
+function showLearn(idx) {
+  const s = signs[currentCategory][idx];
+  currentSign = s;
+  document.getElementById('learn-sign-name').textContent = s.name;
+  document.getElementById('learn-sign-sub').textContent = currentCategory + ' · 난이도: ' + s.diff + ' / ' + (s.diff==='쉬움'?'Easy':'Medium');
+  document.getElementById('learn-emoji').textContent = s.emoji;
+  document.getElementById('learn-desc').textContent = s.desc;
+  document.getElementById('learn-back-btn').onclick = () => showCategory(currentCategory);
+  document.getElementById('practice-back-btn').onclick = () => goTo('learn');
+  document.getElementById('practice-title').textContent = '연습 / Practice: ' + s.name;
+  document.getElementById('practice-emoji').textContent = s.emoji;
+  resetPractice();
+  goTo('learn');
+}
+
+function resetPractice() {
+  attemptCount = 0; failCount = 0;
+  for(let i=0;i<3;i++) {
+    const d = document.getElementById('dot-'+i);
+    if(d) { d.className='attempt-dot'; }
+  }
+  setFeedback('neutral','🤲','준비 완료 / Ready','캡처 버튼을 눌러 분석하세요 / Press capture to analyze','—');
+  document.getElementById('hint-box').className = 'hint-box';
+  document.getElementById('hand-status').textContent = '대기 중... / Waiting';
+}
+
+function setFeedback(type, icon, headline, sub, score) {
+  const banner = document.getElementById('vfb-banner');
+  const iconEl = document.getElementById('vfb-icon');
+  const headlineEl = document.getElementById('vfb-headline');
+  const subEl = document.getElementById('vfb-sub');
+  const scoreEl = document.getElementById('vfb-score');
+  banner.className = 'vfb-banner ' + type;
+  iconEl.textContent = icon;
+  headlineEl.className = 'vfb-headline ' + type;
+  headlineEl.textContent = headline;
+  subEl.textContent = sub;
+  scoreEl.className = 'vfb-score ' + type;
+  scoreEl.textContent = score;
+}
+
+function doCapture() {
+  const score = Math.floor(Math.random() * 40) + 60;
+  const dotIdx = attemptCount % 3;
+  const dot = document.getElementById('dot-'+dotIdx);
+  document.getElementById('hand-status').textContent = '손 감지됨 ✓ / Hand detected ✓';
+  if (score >= 80) {
+    if(dot) dot.className = 'attempt-dot pass';
+    setFeedback(
+      'success', '✅',
+      '✓ 정답! / Correct!',
+      '훌륭해요! 다음 수어로 넘어가보세요 / Great job! Move to the next sign',
+      score + '%'
+    );
+    showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
+    failCount = 0;
+  } else {
+    if(dot) dot.className = 'attempt-dot fail';
+    failCount++;
+    setFeedback(
+      'fail', '❌',
+      '✗ 다시 시도 / Try Again',
+      '조금 더 연습해보세요 / Keep practicing!',
+      score + '%'
+    );
+    showToast('다시 시도해보세요 / Try again (' + score + '%)', 'error');
+    if (failCount >= 3 && currentSign) {
+      document.getElementById('hint-box').className = 'hint-box visible';
+      document.getElementById('hint-content').textContent = currentSign.hint || '손 위치를 조정해보세요 / Adjust your hand position';
+    }
+  }
+  attemptCount++;
+}
+
+function doLogout() {
+  showToast('로그아웃 되었습니다 / Logged out', 'info');
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pw').value = '';
+  setTimeout(() => goTo('login'), 700);
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('vfb-toast');
+  t.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
+  t.className = 'vfb-toast ' + type + ' show';
+  setTimeout(() => { t.className = 'vfb-toast'; }, 2800);
+}
+</script>
+</body>
+</html>
