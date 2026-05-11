@@ -602,28 +602,28 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <div class="greeting-sub">Admin Dashboard / 시스템 관리</div>
     </div>
     <div class="stat-row">
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val">24</div><div class="stat-lbl">총 사용자<br>Total Users</div></div>
-      <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-val">59</div><div class="stat-lbl">총 레슨<br>Total Lessons</div></div>
-      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-val">73%</div><div class="stat-lbl">완료율<br>Completion</div></div>
+      <div class="stat-card" onclick="goTo('admin-users')" style="cursor:pointer;"><div class="stat-icon">👥</div><div class="stat-val">24</div><div class="stat-lbl">총 사용자<br>Total Users</div><div style="font-size:9px;color:var(--teal);margin-top:4px;">↗ 보기</div></div>
+      <div class="stat-card" onclick="goTo('admin-lessons-list')" style="cursor:pointer;"><div class="stat-icon">📝</div><div class="stat-val">59</div><div class="stat-lbl">총 레슨<br>Total Lessons</div><div style="font-size:9px;color:var(--teal);margin-top:4px;">↗ 보기</div></div>
+      <div class="stat-card" onclick="goTo('admin-all-progress')" style="cursor:pointer;"><div class="stat-icon">📈</div><div class="stat-val">73%</div><div class="stat-lbl">완료율<br>Completion</div><div style="font-size:9px;color:var(--teal);margin-top:4px;">↗ 보기</div></div>
     </div>
     <div class="section-title">관리 메뉴 / Management</div>
     <div class="admin-grid">
-      <div class="admin-card" onclick="showToast('레슨 관리 페이지 / Lesson Manager', 'info')">
+      <div class="admin-card" onclick="goTo('admin-add-sign')">
         <div class="admin-card-icon">➕</div>
         <div class="admin-card-title">새 수어 추가</div>
         <div class="admin-card-sub">Add New Sign/Lesson</div>
       </div>
-      <div class="admin-card" onclick="showToast('수어 편집 / Edit Sign', 'info')">
+      <div class="admin-card" onclick="goTo('admin-edit-sign')">
         <div class="admin-card-icon">✏️</div>
         <div class="admin-card-title">수어/레슨 수정</div>
         <div class="admin-card-sub">Edit Sign/Lesson</div>
       </div>
-      <div class="admin-card" onclick="showToast('삭제 확인 필요 / Deletion requires confirm', 'error')">
+      <div class="admin-card" onclick="goTo('admin-delete-sign')">
         <div class="admin-card-icon">🗑</div>
         <div class="admin-card-title">수어/레슨 삭제</div>
         <div class="admin-card-sub">Delete Sign/Lesson</div>
       </div>
-      <div class="admin-card" onclick="showToast('사용자 진행도 보기 / User Progress', 'info')">
+      <div class="admin-card" onclick="goTo('admin-all-progress')">
         <div class="admin-card-icon">📊</div>
         <div class="admin-card-title">사용자 진행 현황</div>
         <div class="admin-card-sub">View All Progress</div>
@@ -792,6 +792,234 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
   </div>
 </div>
 
+
+<!-- ══ ADMIN: ADD SIGN ══ -->
+<div id="screen-admin-add-sign" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">➕ 새 수어 추가</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">새 수어/레슨 추가 / Add New Sign</div>
+    <div class="login-card" style="max-width:100%;">
+      <div class="field-label">수어명 / Sign Name</div>
+      <input class="field-input" type="text" placeholder="예: 안녕하세요 / e.g. Hello" id="add-name"/>
+      <div class="field-label">카테고리 / Category</div>
+      <select class="field-input" id="add-category" style="cursor:pointer;">
+        <option value="지문자">기본 손가락 철자 / Fingerspelling</option>
+        <option value="숫자">숫자 / Numbers</option>
+        <option value="인사">인사 / Greetings</option>
+        <option value="일상">일상 표현 / Daily</option>
+      </select>
+      <div class="field-label">난이도 / Difficulty</div>
+      <select class="field-input" id="add-diff" style="cursor:pointer;">
+        <option value="쉬움">쉬움 / Easy</option>
+        <option value="보통">보통 / Medium</option>
+        <option value="어려움">어려움 / Hard</option>
+      </select>
+      <div class="field-label">수어 설명 / Description</div>
+      <textarea class="field-input" id="add-desc" rows="3" placeholder="수어 동작 설명 / Describe the sign movement..." style="resize:vertical;"></textarea>
+      <div class="field-label">힌트 / Hint</div>
+      <input class="field-input" type="text" placeholder="틀렸을 때 표시할 힌트 / Hint shown on failure" id="add-hint"/>
+      <div class="field-label">시연 이미지/영상 업로드 / Demo Media</div>
+      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 기능 / File upload feature', 'info')">
+        <div style="font-size:28px;margin-bottom:6px;">📁</div>
+        <div style="font-size:12px;color:var(--text-dim);">이미지 또는 영상 업로드 / Upload image or video</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · MP4, JPG, PNG</div>
+      </div>
+      <div class="field-label">기준 랜드마크 데이터 / Reference Landmark JSON</div>
+      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('JSON 업로드 / JSON upload', 'info')">
+        <div style="font-size:28px;margin-bottom:6px;">📊</div>
+        <div style="font-size:12px;color:var(--text-dim);">랜드마크 JSON 업로드 / Upload landmark JSON</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · JSON</div>
+      </div>
+      <button class="btn-primary" onclick="doAddSign()">💾 저장 / Save Sign</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: EDIT SIGN ══ -->
+<div id="screen-admin-edit-sign" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">✏️ 수어 수정</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">수어/레슨 수정 / Edit Sign</div>
+    <!-- sign picker -->
+    <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px;margin-bottom:14px;">
+      <div class="field-label" style="margin-bottom:8px;">수정할 수어 선택 / Select Sign to Edit</div>
+      <div id="edit-sign-picker" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <!-- edit form (hidden until selection) -->
+    <div id="edit-form" style="display:none;">
+      <div class="login-card" style="max-width:100%;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="font-size:28px;" id="edit-emoji-preview">👋</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-bright);" id="edit-form-title">안녕하세요</div>
+            <div style="font-size:11px;color:var(--text-dim);" id="edit-form-cat">인사 / Greetings</div>
+          </div>
+        </div>
+        <div class="field-label">수어명 / Sign Name</div>
+        <input class="field-input" type="text" id="edit-name"/>
+        <div class="field-label">난이도 / Difficulty</div>
+        <select class="field-input" id="edit-diff" style="cursor:pointer;">
+          <option value="쉬움">쉬움 / Easy</option>
+          <option value="보통">보통 / Medium</option>
+          <option value="어려움">어려움 / Hard</option>
+        </select>
+        <div class="field-label">수어 설명 / Description</div>
+        <textarea class="field-input" id="edit-desc" rows="3" style="resize:vertical;"></textarea>
+        <div class="field-label">힌트 / Hint</div>
+        <input class="field-input" type="text" id="edit-hint"/>
+        <div class="field-label">시연 미디어 교체 / Replace Demo Media</div>
+        <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 / File upload', 'info')">
+          <div style="font-size:12px;color:var(--text-dim);">📁 새 파일 업로드 / Upload new file (optional)</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-capture" onclick="doSaveEdit()">💾 변경 저장 / Save Changes</button>
+          <button class="btn-sec" onclick="document.getElementById('edit-form').style.display='none'">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: DELETE SIGN ══ -->
+<div id="screen-admin-delete-sign" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">🗑 수어 삭제</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">수어/레슨 삭제 / Delete Sign</div>
+    <div style="background:var(--red-err-dim);border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:center;">
+      <span style="font-size:18px;">⚠️</span>
+      <span style="font-size:12px;color:#E74C3C;">삭제된 레슨은 복구할 수 없습니다. 연결된 사용자 진행 데이터도 함께 삭제됩니다.<br>Deleted lessons cannot be recovered. Linked user progress will also be deleted.</span>
+    </div>
+    <div id="delete-sign-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <!-- confirm modal overlay -->
+    <div id="delete-confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:50;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--navy-mid);border:1px solid rgba(231,76,60,0.5);border-radius:var(--radius-lg);padding:24px;max-width:320px;width:100%;">
+        <div style="font-size:28px;text-align:center;margin-bottom:12px;">🗑</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text-bright);text-align:center;margin-bottom:6px;">이 레슨을 삭제하시겠습니까?</div>
+        <div style="font-size:13px;color:var(--text-dim);text-align:center;margin-bottom:6px;">Delete this lesson?</div>
+        <div style="font-size:14px;font-weight:700;color:#E74C3C;text-align:center;margin-bottom:16px;" id="delete-target-name"></div>
+        <div style="background:rgba(231,76,60,0.1);border-radius:var(--radius-sm);padding:10px;font-size:11px;color:#E74C3C;margin-bottom:16px;">⚠️ 이 레슨에 연결된 사용자 진행 데이터도 함께 삭제됩니다.<br>User progress linked to this lesson will also be deleted.</div>
+        <div class="btn-row">
+          <button style="flex:1;background:#E74C3C;border:none;border-radius:var(--radius-sm);padding:12px;color:#fff;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;" onclick="confirmDelete()">🗑 삭제 / Delete</button>
+          <button class="btn-sec" style="flex:1;" onclick="closeDeleteConfirm()">취소 / Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: ALL USERS ══ -->
+<div id="screen-admin-users" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">👥 사용자 목록</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">사용자 목록 / User List</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">김</div><div class="sign-info"><div class="sign-name">김민준 / Kim Minjun</div><div class="sign-diff">kim@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">이</div><div class="sign-info"><div class="sign-name">이서연 / Lee Seoyeon</div><div class="sign-diff">lee@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">박</div><div class="sign-info"><div class="sign-name">박도윤 / Park Doyun</div><div class="sign-diff">park@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">R</div><div class="sign-info"><div class="sign-name">Rania / 라니아</div><div class="sign-diff">rania@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">R</div><div class="sign-info"><div class="sign-name">Ruzhan / 루즈한</div><div class="sign-diff">ruzhan@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
+      <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">최</div><div class="sign-info"><div class="sign-name">최지아 / Choi Jia</div><div class="sign-diff">choi@email.com · 학습자</div></div><div class="sign-status-badge todo"><div class="status-dot todo"></div>비활성</div></div>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-dim);">총 24명 등록 / 24 users registered</div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: ALL LESSONS LIST ══ -->
+<div id="screen-admin-lessons-list" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">📝 레슨 목록</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">전체 레슨 목록 / All Lessons</div>
+    <div id="admin-all-lessons-container" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- ══ ADMIN: ALL PROGRESS ══ -->
+<div id="screen-admin-all-progress" class="screen">
+  <div class="topnav">
+    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="nav-links"><button class="nav-btn active">📊 진행 현황</button></div>
+    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+  </div>
+  <div class="content">
+    <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
+    <div class="section-title">전체 사용자 진행 현황 / All Users Progress</div>
+    <div class="stat-row" style="margin-bottom:20px;">
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val">73%</div><div class="stat-lbl">전체 완료율<br>Overall Rate</div></div>
+      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-val">95%</div><div class="stat-lbl">최고 점수<br>Top Score</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val">18</div><div class="stat-lbl">활성 학습자<br>Active Users</div></div>
+    </div>
+    <!-- completion board -->
+    <div class="section-title">완료 현황판 / Completion Board</div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="progress-board">
+      <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-bright);">김민준 / Kim Minjun</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--yellow);">92%</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">26개 완료 · 연속 7일 / 26 completed · 7 day streak</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:92%"></div></div>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-bright);">이서연 / Lee Seoyeon</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--yellow);">87%</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">19개 완료 · 연속 5일 / 19 completed · 5 day streak</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:87%"></div></div>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-bright);">Rania / 라니아</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--yellow);">78%</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">15개 완료 · 연속 3일 / 15 completed · 3 day streak</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:78%"></div></div>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-bright);">Ruzhan / 루즈한</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--yellow);">65%</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">12개 완료 · 연속 2일 / 12 completed · 2 day streak</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:65%"></div></div>
+      </div>
+      <div style="background:var(--navy-mid);border:1px solid var(--border-faint);border-radius:var(--radius-md);padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-bright);">박도윤 / Park Doyun</div>
+          <div style="font-family:var(--mono);font-size:13px;color:var(--yellow);">42%</div>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">8개 완료 · 연속 1일 / 8 completed · 1 day streak</div>
+        <div class="bar-bg"><div class="bar-fill" style="width:42%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- #app -->
 
 <script>
@@ -860,10 +1088,7 @@ function doSignUp() {
   setTimeout(() => goTo('login'), 900);
 }
 
-function goTo(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + screen).classList.add('active');
-}
+// goTo is defined in the admin section above — handles all screens + dynamic population
 
 function showCategory(cat) {
   currentCategory = cat;
@@ -957,6 +1182,137 @@ function doCapture() {
     }
   }
   attemptCount++;
+}
+
+// ── ADMIN SUB-PAGE LOGIC ──
+let pendingDeleteKey = null;
+let editingSignKey = null;
+
+// All signs flattened for admin views
+function getAllSigns() {
+  const all = [];
+  Object.entries(signs).forEach(([cat, list]) => {
+    list.forEach((s, i) => all.push({...s, cat, idx: i}));
+  });
+  return all;
+}
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  // populate dynamic screens
+  if (screen === 'admin-edit-sign') buildEditPicker();
+  if (screen === 'admin-delete-sign') buildDeleteList();
+  if (screen === 'admin-lessons-list') buildAllLessonsList();
+}
+
+function doAddSign() {
+  const name = document.getElementById('add-name').value.trim();
+  const cat  = document.getElementById('add-category').value;
+  const diff = document.getElementById('add-diff').value;
+  const desc = document.getElementById('add-desc').value.trim();
+  const hint = document.getElementById('add-hint').value.trim();
+  if (!name || !desc) { showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+  // check duplicate
+  if (signs[cat] && signs[cat].find(s => s.name === name)) {
+    showToast('이미 존재하는 수어입니다 / Sign already exists', 'error'); return;
+  }
+  signs[cat].push({ name, emoji: '🤲', diff, done: false, desc: desc || '설명 없음', hint: hint || '손 위치를 확인하세요' });
+  showToast('새 수어 추가 완료! / Sign added!', 'success');
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-desc').value = '';
+  document.getElementById('add-hint').value = '';
+  setTimeout(() => goTo('admin'), 800);
+}
+
+function buildEditPicker() {
+  const container = document.getElementById('edit-sign-picker');
+  container.innerHTML = getAllSigns().map((s) =>
+    `<div class="sign-item" onclick="selectEditSign('${s.cat}',${s.idx})" style="padding:10px 12px;">
+      <div class="sign-thumb" style="font-size:18px;">${s.emoji}</div>
+      <div class="sign-info"><div class="sign-name">${s.name}</div><div class="sign-diff">${s.cat} · ${s.diff}</div></div>
+      <div style="font-size:12px;color:var(--teal);">수정 →</div>
+    </div>`
+  ).join('');
+}
+
+function selectEditSign(cat, idx) {
+  const s = signs[cat][idx];
+  editingSignKey = {cat, idx};
+  document.getElementById('edit-emoji-preview').textContent = s.emoji;
+  document.getElementById('edit-form-title').textContent = s.name;
+  document.getElementById('edit-form-cat').textContent = cat;
+  document.getElementById('edit-name').value = s.name;
+  document.getElementById('edit-diff').value = s.diff;
+  document.getElementById('edit-desc').value = s.desc;
+  document.getElementById('edit-hint').value = s.hint || '';
+  document.getElementById('edit-form').style.display = 'block';
+  document.getElementById('edit-form').scrollIntoView({behavior:'smooth'});
+}
+
+function doSaveEdit() {
+  if (!editingSignKey) return;
+  const {cat, idx} = editingSignKey;
+  const name = document.getElementById('edit-name').value.trim();
+  const diff = document.getElementById('edit-diff').value;
+  const desc = document.getElementById('edit-desc').value.trim();
+  const hint = document.getElementById('edit-hint').value.trim();
+  if (!name || !desc) { showToast('이름과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+  signs[cat][idx] = { ...signs[cat][idx], name, diff, desc, hint };
+  showToast('변경 사항이 저장되었습니다 / Changes saved!', 'success');
+  document.getElementById('edit-form').style.display = 'none';
+  editingSignKey = null;
+  setTimeout(() => goTo('admin'), 700);
+}
+
+function buildDeleteList() {
+  const container = document.getElementById('delete-sign-list');
+  container.innerHTML = getAllSigns().map((s) =>
+    `<div class="sign-item" style="padding:12px 14px;">
+      <div class="sign-thumb" style="font-size:18px;">${s.emoji}</div>
+      <div class="sign-info"><div class="sign-name">${s.name}</div><div class="sign-diff">${s.cat} · ${s.diff}</div></div>
+      <button onclick="askDelete('${s.cat}',${s.idx},'${s.name}')" style="background:var(--red-err-dim);border:1px solid rgba(231,76,60,0.35);border-radius:var(--radius-sm);padding:6px 12px;color:#E74C3C;font-family:var(--sans);font-size:11px;cursor:pointer;">🗑 삭제</button>
+    </div>`
+  ).join('');
+}
+
+function askDelete(cat, idx, name) {
+  pendingDeleteKey = {cat, idx};
+  document.getElementById('delete-target-name').textContent = name + ' (' + cat + ')';
+  const overlay = document.getElementById('delete-confirm-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeDeleteConfirm() {
+  document.getElementById('delete-confirm-overlay').style.display = 'none';
+  pendingDeleteKey = null;
+}
+
+function confirmDelete() {
+  if (!pendingDeleteKey) return;
+  const {cat, idx} = pendingDeleteKey;
+  const name = signs[cat][idx].name;
+  signs[cat].splice(idx, 1);
+  closeDeleteConfirm();
+  showToast(name + ' 삭제 완료 / Deleted!', 'success');
+  buildDeleteList();
+}
+
+function buildAllLessonsList() {
+  const container = document.getElementById('admin-all-lessons-container');
+  container.innerHTML = getAllSigns().map((s) =>
+    `<div class="sign-item" style="padding:12px 14px;">
+      <div class="sign-thumb" style="font-size:18px;">${s.emoji}</div>
+      <div class="sign-info">
+        <div class="sign-name">${s.name}</div>
+        <div class="sign-diff">${s.cat} · ${s.diff}</div>
+      </div>
+      <div class="sign-status-badge ${s.done?'done':'todo'}">
+        <div class="status-dot ${s.done?'done':'todo'}"></div>
+        ${s.done?'학습됨':'미시작'}
+      </div>
+    </div>`
+  ).join('');
 }
 
 function doLogout() {
