@@ -932,7 +932,8 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
   <div class="content">
     <button class="back-btn" onclick="goTo('admin')">← 대시보드 / Dashboard</button>
     <div class="section-title">사용자 목록 / User List</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div id="admin-users-container" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="text-align:center;margin-top:16px;font-size:11px;color:var(--text-dim);" id="admin-users-count"></div>
       <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">김</div><div class="sign-info"><div class="sign-name">김민준 / Kim Minjun</div><div class="sign-diff">kim@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
       <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">이</div><div class="sign-info"><div class="sign-name">이서연 / Lee Seoyeon</div><div class="sign-diff">lee@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
       <div class="sign-item"><div class="sign-thumb" style="font-size:14px;font-weight:700;">박</div><div class="sign-info"><div class="sign-name">박도윤 / Park Doyun</div><div class="sign-diff">park@email.com · 학습자</div></div><div class="sign-status-badge done"><div class="status-dot done"></div>활성</div></div>
@@ -1269,6 +1270,81 @@ function goTo(screen) {
   if (screen === 'admin-edit-sign') buildEditPicker();
   if (screen === 'admin-delete-sign') buildDeleteList();
   if (screen === 'admin-lessons-list') buildAllLessonsList();
+  if (screen === 'admin-users') loadAdminUsers();
+}
+
+async function loadAdminUsers() {
+  const container = document.getElementById('admin-users-container');
+  container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;">로딩 중... / Loading...</div>';
+  try {
+    const res = await fetch(`${API}/users`);
+    const users = await res.json();
+    container.innerHTML = users.map(u => `
+      <div class="sign-item">
+        <div class="sign-thumb" style="font-size:14px;font-weight:700;">
+          ${u.username[0].toUpperCase()}
+        </div>
+        <div class="sign-info">
+          <div class="sign-name">${u.username}</div>
+          <div class="sign-diff">${u.email} · ${u.role}</div>
+        </div>
+        <div class="sign-status-badge done">
+          <div class="status-dot done"></div>활성
+        </div>
+      </div>`).join('');
+    document.getElementById('admin-users-count').textContent =
+      `총 ${users.length}명 등록 / ${users.length} users registered`;
+  } catch (err) {
+    showToast('사용자 로드 실패 / Failed to load users', 'error');
+  }
+}async function loadAdminUsers() {
+  const container = document.getElementById('admin-users-container');
+  container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;">로딩 중... / Loading...</div>';
+  try {
+    const res = await fetch(`${API}/users`);
+    const users = await res.json();
+    container.innerHTML = users.map(u => `
+      <div class="sign-item">
+        <div class="sign-thumb" style="font-size:14px;font-weight:700;">
+          ${u.username[0].toUpperCase()}
+        </div>
+        <div class="sign-info">
+          <div class="sign-name">${u.username}</div>
+          <div class="sign-diff">${u.email} · ${u.role}</div>
+        </div>
+        <div class="sign-status-badge done">
+          <div class="status-dot done"></div>활성
+        </div>
+      </div>`).join('');
+    document.getElementById('admin-users-count').textContent =
+      `총 ${users.length}명 등록 / ${users.length} users registered`;
+  } catch (err) {
+    showToast('사용자 로드 실패 / Failed to load users', 'error');
+  }
+}async function loadAdminUsers() {
+  const container = document.getElementById('admin-users-container');
+  container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;">로딩 중... / Loading...</div>';
+  try {
+    const res = await fetch(`${API}/users`);
+    const users = await res.json();
+    container.innerHTML = users.map(u => `
+      <div class="sign-item">
+        <div class="sign-thumb" style="font-size:14px;font-weight:700;">
+          ${u.username[0].toUpperCase()}
+        </div>
+        <div class="sign-info">
+          <div class="sign-name">${u.username}</div>
+          <div class="sign-diff">${u.email} · ${u.role}</div>
+        </div>
+        <div class="sign-status-badge done">
+          <div class="status-dot done"></div>활성
+        </div>
+      </div>`).join('');
+    document.getElementById('admin-users-count').textContent =
+      `총 ${users.length}명 등록 / ${users.length} users registered`;
+  } catch (err) {
+    showToast('사용자 로드 실패 / Failed to load users', 'error');
+  }
 }
 
 async function loadCategories() {
@@ -1290,96 +1366,160 @@ async function loadCategories() {
   }
 }
 
-function doAddSign() {
+async function doAddSign() {
   const name = document.getElementById('add-name').value.trim();
   const cat  = document.getElementById('add-category').value;
   const diff = document.getElementById('add-diff').value;
   const desc = document.getElementById('add-desc').value.trim();
   const hint = document.getElementById('add-hint').value.trim();
   if (!name || !desc) { showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return; }
-  // check duplicate
-  if (signs[cat] && signs[cat].find(s => s.name === name)) {
-    showToast('이미 존재하는 수어입니다 / Sign already exists', 'error'); return;
+  try {
+    const catMap = {'지문자':1,'숫자':2,'인사':3,'일상':4};
+    const res = await fetch(`${API}/lessons`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        category_id: catMap[cat],
+        sign_name: name,
+        difficulty: diff,
+        description: desc,
+        hint: hint
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('새 수어 추가 완료! / Sign added!', 'success');
+      document.getElementById('add-name').value = '';
+      document.getElementById('add-desc').value = '';
+      document.getElementById('add-hint').value = '';
+      setTimeout(() => goTo('admin'), 800);
+    } else {
+      showToast(data.error || '추가 실패 / Failed to add', 'error');
+    }
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
   }
-  signs[cat].push({ name, emoji: '🤲', diff, done: false, desc: desc || '설명 없음', hint: hint || '손 위치를 확인하세요' });
-  showToast('새 수어 추가 완료! / Sign added!', 'success');
-  document.getElementById('add-name').value = '';
-  document.getElementById('add-desc').value = '';
-  document.getElementById('add-hint').value = '';
-  setTimeout(() => goTo('admin'), 800);
 }
 
-function buildEditPicker() {
+async function buildEditPicker() {
   const container = document.getElementById('edit-sign-picker');
-  container.innerHTML = getAllSigns().map((s) =>
-    `<div class="sign-item" onclick="selectEditSign('${s.cat}',${s.idx})" style="padding:10px 12px;">
-      <div class="sign-thumb" style="font-size:18px;">${s.emoji}</div>
-      <div class="sign-info"><div class="sign-name">${s.name}</div><div class="sign-diff">${s.cat} · ${s.diff}</div></div>
-      <div style="font-size:12px;color:var(--teal);">수정 →</div>
-    </div>`
-  ).join('');
+  container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;">로딩 중... / Loading...</div>';
+  try {
+    const cats = await fetch(`${API}/categories`).then(r => r.json());
+    let allLessons = [];
+    for (const cat of cats) {
+      const lessons = await fetch(`${API}/lessons/${cat.category_id}`).then(r => r.json());
+      lessons.forEach(l => allLessons.push({...l, cat_name: cat.name}));
+    }
+    container.innerHTML = allLessons.map(l => `
+      <div class="sign-item" onclick="selectEditLesson(${JSON.stringify(l).replace(/"/g,'&quot;')})" style="padding:10px 12px;">
+        <div class="sign-thumb" style="font-size:18px;">🤲</div>
+        <div class="sign-info">
+          <div class="sign-name">${l.sign_name}</div>
+          <div class="sign-diff">${l.cat_name} · ${l.difficulty}</div>
+        </div>
+        <div style="font-size:12px;color:var(--teal);">수정 →</div>
+      </div>`).join('');
+  } catch (err) {
+    showToast('레슨 로드 실패 / Failed to load', 'error');
+  }
 }
 
-function selectEditSign(cat, idx) {
-  const s = signs[cat][idx];
-  editingSignKey = {cat, idx};
-  document.getElementById('edit-emoji-preview').textContent = s.emoji;
-  document.getElementById('edit-form-title').textContent = s.name;
-  document.getElementById('edit-form-cat').textContent = cat;
-  document.getElementById('edit-name').value = s.name;
-  document.getElementById('edit-diff').value = s.diff;
-  document.getElementById('edit-desc').value = s.desc;
-  document.getElementById('edit-hint').value = s.hint || '';
+function selectEditLesson(lesson) {
+  editingSignKey = lesson;
+  document.getElementById('edit-emoji-preview').textContent = '🤲';
+  document.getElementById('edit-form-title').textContent = lesson.sign_name;
+  document.getElementById('edit-form-cat').textContent = lesson.cat_name;
+  document.getElementById('edit-name').value = lesson.sign_name;
+  document.getElementById('edit-diff').value = lesson.difficulty;
+  document.getElementById('edit-desc').value = lesson.description || '';
+  document.getElementById('edit-hint').value = lesson.hint || '';
   document.getElementById('edit-form').style.display = 'block';
   document.getElementById('edit-form').scrollIntoView({behavior:'smooth'});
 }
 
-function doSaveEdit() {
+async function doSaveEdit() {
   if (!editingSignKey) return;
-  const {cat, idx} = editingSignKey;
   const name = document.getElementById('edit-name').value.trim();
   const diff = document.getElementById('edit-diff').value;
   const desc = document.getElementById('edit-desc').value.trim();
   const hint = document.getElementById('edit-hint').value.trim();
   if (!name || !desc) { showToast('이름과 설명을 입력하세요 / Enter name and description', 'error'); return; }
-  signs[cat][idx] = { ...signs[cat][idx], name, diff, desc, hint };
-  showToast('변경 사항이 저장되었습니다 / Changes saved!', 'success');
-  document.getElementById('edit-form').style.display = 'none';
-  editingSignKey = null;
-  setTimeout(() => goTo('admin'), 700);
+  try {
+    const res = await fetch(`${API}/lessons/${editingSignKey.lesson_id}`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ sign_name: name, difficulty: diff, description: desc, hint: hint })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('변경 사항 저장 완료 / Changes saved!', 'success');
+      document.getElementById('edit-form').style.display = 'none';
+      editingSignKey = null;
+      setTimeout(() => goTo('admin'), 700);
+    } else {
+      showToast(data.error || '수정 실패 / Failed to update', 'error');
+    }
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
+  }
 }
 
-function buildDeleteList() {
+async function buildDeleteList() {
   const container = document.getElementById('delete-sign-list');
-  container.innerHTML = getAllSigns().map((s) =>
-    `<div class="sign-item" style="padding:12px 14px;">
-      <div class="sign-thumb" style="font-size:18px;">${s.emoji}</div>
-      <div class="sign-info"><div class="sign-name">${s.name}</div><div class="sign-diff">${s.cat} · ${s.diff}</div></div>
-      <button onclick="askDelete('${s.cat}',${s.idx},'${s.name}')" style="background:var(--red-err-dim);border:1px solid rgba(231,76,60,0.35);border-radius:var(--radius-sm);padding:6px 12px;color:#E74C3C;font-family:var(--sans);font-size:11px;cursor:pointer;">🗑 삭제</button>
-    </div>`
-  ).join('');
+  container.innerHTML = '<div style="color:var(--text-dim);font-size:12px;">로딩 중... / Loading...</div>';
+  try {
+    const cats = await fetch(`${API}/categories`).then(r => r.json());
+    let allLessons = [];
+    for (const cat of cats) {
+      const lessons = await fetch(`${API}/lessons/${cat.category_id}`).then(r => r.json());
+      lessons.forEach(l => allLessons.push({...l, cat_name: cat.name}));
+    }
+    container.innerHTML = allLessons.map(l => `
+      <div class="sign-item" style="padding:12px 14px;">
+        <div class="sign-thumb" style="font-size:18px;">🤲</div>
+        <div class="sign-info">
+          <div class="sign-name">${l.sign_name}</div>
+          <div class="sign-diff">${l.cat_name} · ${l.difficulty}</div>
+        </div>
+        <button onclick="askDelete(${l.lesson_id},'${l.sign_name}')"
+          style="background:var(--red-err-dim);border:1px solid rgba(231,76,60,0.35);
+          border-radius:var(--radius-sm);padding:6px 12px;color:#E74C3C;
+          font-family:var(--sans);font-size:11px;cursor:pointer;">🗑 삭제</button>
+      </div>`).join('');
+  } catch (err) {
+    showToast('레슨 로드 실패 / Failed to load', 'error');
+  }
 }
 
-function askDelete(cat, idx, name) {
-  pendingDeleteKey = {cat, idx};
-  document.getElementById('delete-target-name').textContent = name + ' (' + cat + ')';
-  const overlay = document.getElementById('delete-confirm-overlay');
-  overlay.style.display = 'flex';
+function askDelete(lessonId, name) {
+  pendingDeleteKey = lessonId;
+  document.getElementById('delete-target-name').textContent = name;
+  document.getElementById('delete-confirm-overlay').style.display = 'flex';
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteKey) return;
+  try {
+    const res = await fetch(`${API}/lessons/${pendingDeleteKey}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (res.ok) {
+      closeDeleteConfirm();
+      showToast('삭제 완료 / Deleted!', 'success');
+      buildDeleteList();
+    } else {
+      showToast(data.error || '삭제 실패 / Failed to delete', 'error');
+    }
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
+  }
 }
 
 function closeDeleteConfirm() {
   document.getElementById('delete-confirm-overlay').style.display = 'none';
   pendingDeleteKey = null;
-}
-
-function confirmDelete() {
-  if (!pendingDeleteKey) return;
-  const {cat, idx} = pendingDeleteKey;
-  const name = signs[cat][idx].name;
-  signs[cat].splice(idx, 1);
-  closeDeleteConfirm();
-  showToast(name + ' 삭제 완료 / Deleted!', 'success');
-  buildDeleteList();
 }
 
 function buildAllLessonsList() {
