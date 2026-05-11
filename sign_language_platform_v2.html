@@ -1023,6 +1023,9 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 </div><!-- #app -->
 
 <script>
+const API = 'http://127.0.0.1:5000/api';
+let currentUser = null;
+
 const signs = {
   '지문자': [
     {name:'A', emoji:'✊', diff:'쉬움', done:true, desc:'손을 주먹 쥐고 엄지를 옆으로 세웁니다. / Make a fist with thumb pointing sideways.', hint:'엄지가 옆을 향해야 해요 / Thumb should point to the side'},
@@ -1062,52 +1065,87 @@ function selectRole(role) {
   document.getElementById('role-admin').className = 'role-btn' + (role==='admin'?' selected':'');
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value;
   const pw = document.getElementById('login-pw').value;
-  if (!email || !pw) {
-    showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return;
-  }
-  if (currentRole === 'admin') {
-    showToast('관리자로 로그인 / Admin logged in', 'success');
-    setTimeout(() => goTo('admin'), 600);
-  } else {
-    showToast('로그인 성공! / Login successful!', 'success');
-    setTimeout(() => goTo('dashboard'), 600);
+  if (!email || !pw) { showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return; }
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      currentUser = data;
+      showToast('로그인 성공! / Login successful!', 'success');
+      if (data.role === 'admin') {
+        setTimeout(() => goTo('admin'), 600);
+      } else {
+        document.getElementById('dash-avatar').textContent = data.username[0].toUpperCase();
+        setTimeout(() => goTo('dashboard'), 600);
+      }
+    } else {
+      showToast(data.error || '로그인 실패 / Login failed', 'error');
+    }
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
   }
 }
 
-function doSignUp() {
+async function doSignUp() {
   const name = document.getElementById('signup-name').value;
   const email = document.getElementById('signup-email').value;
   const pw = document.getElementById('signup-pw').value;
   const confirm = document.getElementById('signup-confirm').value;
-  if (!name||!email||!pw) { showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return; }
+  if (!name || !email || !pw) { showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return; }
   if (pw !== confirm) { showToast('비밀번호 불일치 / Passwords do not match', 'error'); return; }
-  showToast(name + '님 환영합니다! / Welcome!', 'success');
-  setTimeout(() => goTo('login'), 900);
+  try {
+    const res = await fetch(`${API}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: name, email, password: pw })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast(name + '님 환영합니다! / Welcome!', 'success');
+      setTimeout(() => goTo('login'), 900);
+    } else {
+      showToast(data.error || '가입 실패 / Register failed', 'error');
+    }
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
+  }
 }
 
 // goTo is defined in the admin section above — handles all screens + dynamic population
 
-function showCategory(cat) {
-  currentCategory = cat;
-  const list = signs[cat] || [];
-  document.getElementById('signs-title').textContent = cat + ' — 수어 목록 / Signs';
-  const c = document.getElementById('sign-list-container');
-  c.innerHTML = list.map((s, i) => `
-    <div class="sign-item" onclick="showLearn(${i})">
-      <div class="sign-thumb">${s.emoji}</div>
-      <div class="sign-info">
-        <div class="sign-name">${s.name}</div>
-        <div class="sign-diff">난이도: ${s.diff} / ${s.diff==='쉬움'?'Easy':'Medium'}</div>
-      </div>
-      <div class="sign-status-badge ${s.done?'done':'todo'}">
-        <div class="status-dot ${s.done?'done':'todo'}"></div>
-        ${s.done?'완료 / Done':'미시작 / Todo'}
-      </div>
-    </div>`).join('');
-  goTo('signs');
+async function showCategory(catId, catName) {
+  currentCategory = catName;
+  try {
+    const res = await fetch(`${API}/lessons/${catId}`);
+    const lessons = await res.json();
+    if (lessons.length === 0) {
+      showToast('아직 레슨이 없습니다 / No lessons yet', 'info');
+      return;
+    }
+    document.getElementById('signs-title').textContent = catName + ' — 수어 목록 / Signs';
+    const c = document.getElementById('sign-list-container');
+    c.innerHTML = lessons.map((s, i) => `
+      <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+        <div class="sign-thumb">🤲</div>
+        <div class="sign-info">
+          <div class="sign-name">${s.sign_name}</div>
+          <div class="sign-diff">난이도: ${s.difficulty}</div>
+        </div>
+        <div class="sign-status-badge todo">
+          <div class="status-dot todo"></div>미시작 / Todo
+        </div>
+      </div>`).join('');
+    goTo('signs');
+  } catch (err) {
+    showToast('레슨 로드 실패 / Failed to load lessons', 'error');
+  }
 }
 
 function showLearn(idx) {
@@ -1121,6 +1159,20 @@ function showLearn(idx) {
   document.getElementById('practice-back-btn').onclick = () => goTo('learn');
   document.getElementById('practice-title').textContent = '연습 / Practice: ' + s.name;
   document.getElementById('practice-emoji').textContent = s.emoji;
+  resetPractice();
+  goTo('learn');
+}
+
+function showLearnFromDB(lesson) {
+  currentSign = lesson;
+  document.getElementById('learn-sign-name').textContent = lesson.sign_name;
+  document.getElementById('learn-sign-sub').textContent = currentCategory + ' · 난이도: ' + lesson.difficulty;
+  document.getElementById('learn-emoji').textContent = '🤲';
+  document.getElementById('learn-desc').textContent = lesson.description || '설명 없음';
+  document.getElementById('learn-back-btn').onclick = () => goTo('signs');
+  document.getElementById('practice-back-btn').onclick = () => goTo('learn');
+  document.getElementById('practice-title').textContent = '연습 / Practice: ' + lesson.sign_name;
+  document.getElementById('practice-emoji').textContent = '🤲';
   resetPractice();
   goTo('learn');
 }
@@ -1165,6 +1217,19 @@ function doCapture() {
       score + '%'
     );
     showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
+    // Save to database
+    if (currentUser && currentSign) {
+      fetch(`${API}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUser.user_id,
+          lesson_id: currentSign.lesson_id,
+          score: score,
+          status: score >= 80 ? 'completed' : 'in_progress'
+        })
+      });
+    }
     failCount = 0;
   } else {
     if(dot) dot.className = 'attempt-dot fail';
@@ -1200,10 +1265,29 @@ function getAllSigns() {
 function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
-  // populate dynamic screens
+  if (screen === 'lessons') loadCategories();
   if (screen === 'admin-edit-sign') buildEditPicker();
   if (screen === 'admin-delete-sign') buildDeleteList();
   if (screen === 'admin-lessons-list') buildAllLessonsList();
+}
+
+async function loadCategories() {
+  try {
+    const res = await fetch(`${API}/categories`);
+    const categories = await res.json();
+    const iconMap = { '지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬' };
+    const grid = document.querySelector('#screen-lessons .cat-grid');
+    grid.innerHTML = categories.map(cat => `
+      <div class="cat-card" onclick="showCategory(${cat.category_id}, '${cat.name}')">
+        <span class="cat-emoji">${iconMap[cat.name] || '🤲'}</span>
+        <div class="cat-name">${cat.name}</div>
+        <div class="cat-sub">${cat.description}</div>
+        <span class="cat-badge notstarted">시작하기</span>
+        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:0%"></div></div>
+      </div>`).join('');
+  } catch (err) {
+    showToast('카테고리 로드 실패 / Failed to load categories', 'error');
+  }
 }
 
 function doAddSign() {
