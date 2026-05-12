@@ -26,31 +26,42 @@ def index():
 def login():
     data = request.get_json()
     email = data['email']
-    password = data['password'].encode('utf-8')
+    password = data['password']
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM USERS WHERE email = %s", (email,))
     user = cur.fetchone()
     cur.close()
-    if user and bcrypt.checkpw(password, user[3].encode('utf-8')):
+    if not user:
+        return jsonify({'error': '이메일을 찾을 수 없습니다 / Email not found'}), 401
+    try:
+        password_match = bcrypt.checkpw(
+            password.encode('utf-8'),
+            user[3].encode('utf-8')
+        )
+    except Exception:
+        password_match = False
+    if password_match:
         return jsonify({
             'message': '로그인 성공 / Login successful',
             'user_id': user[0],
             'username': user[1],
             'role': user[4]
         }), 200
-    return jsonify({'error': '잘못된 자격증명 / Invalid credentials'}), 401
+    return jsonify({'error': '비밀번호가 틀렸습니다 / Wrong password'}), 401
 
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
     username = data['username']
     email = data['email']
-    password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+    password = data['password']
     role = data.get('role', 'user')
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    hashed_str = hashed.decode('utf-8')
     try:
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO USERS (username, email, password, role) VALUES (%s, %s, %s, %s)",
-                    (username, email, password, role))
+                    (username, email, hashed_str, role))
         mysql.connection.commit()
         cur.close()
         return jsonify({'message': '가입 완료 / Registered'}), 201
