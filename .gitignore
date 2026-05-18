@@ -1,0 +1,31 @@
+# Virtual Environment
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+
+# Environment variables
+.env
+config.py
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+test_mediapipe.py
+test_webcam.py
+test_hands.py
