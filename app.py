@@ -56,10 +56,18 @@ def register():
     email = data['email']
     password = data['password']
     role = data.get('role', 'user')
+
+    # Check duplicate email
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM USERS WHERE email = %s", (email,))
+    existing = cur.fetchone()
+    if existing:
+        cur.close()
+        return jsonify({'error': '이미 등록된 이메일입니다 / Email already registered'}), 400
+
     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     hashed_str = hashed.decode('utf-8')
     try:
-        cur = mysql.connection.cursor()
         cur.execute("INSERT INTO USERS (username, email, password, role) VALUES (%s, %s, %s, %s)",
                     (username, email, hashed_str, role))
         mysql.connection.commit()
@@ -143,5 +151,89 @@ def get_users():
     cur.close()
     return jsonify([{'user_id': r[0], 'username': r[1], 'email': r[2], 'role': r[3], 'created_at': str(r[4])} for r in rows])
 
+# ── GET USER DASHBOARD STATS ──
+@app.route('/api/stats/<int:user_id>', methods=['GET'])
+def get_user_stats(user_id):
+    cur = mysql.connection.cursor()
+    # Total completed lessons
+    cur.execute("""SELECT COUNT(*) FROM USER_PROGRESS 
+                   WHERE user_id = %s AND status = 'completed'""", (user_id,))
+    completed = cur.fetchone()[0]
+    # Average score
+    cur.execute("""SELECT AVG(score) FROM USER_PROGRESS 
+                   WHERE user_id = %s AND status = 'completed'""", (user_id,))
+    avg = cur.fetchone()[0]
+    avg_score = round(avg) if avg else 0
+    # Total lessons available
+    cur.execute("SELECT COUNT(*) FROM LESSONS")
+    total = cur.fetchone()[0]
+    cur.close()
+    return app.response_class(
+        response=json.dumps({
+            'completed': completed,
+            'avg_score': avg_score,
+            'total_lessons': total,
+            'remaining': total - completed
+        }, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
+# ── GET ADMIN DASHBOARD STATS ──
+@app.route('/api/admin/stats', methods=['GET'])
+def get_admin_stats():
+    cur = mysql.connection.cursor()
+    # Total users (excluding admin)
+    cur.execute("SELECT COUNT(*) FROM USERS WHERE role = 'user'")
+    total_users = cur.fetchone()[0]
+    # Total lessons
+    cur.execute("SELECT COUNT(*) FROM LESSONS")
+    total_lessons = cur.fetchone()[0]
+    # Overall completion rate
+    cur.execute("SELECT COUNT(*) FROM USER_PROGRESS WHERE status = 'completed'")
+    completed = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) FROM USER_PROGRESS")
+    total_attempts = cur.fetchone()[0]
+    completion_rate = round((completed / total_attempts * 100)) if total_attempts > 0 else 0
+    cur.close()
+    return app.response_class(
+        response=json.dumps({
+            'total_users': total_users,
+            'total_lessons': total_lessons,
+            'completion_rate': completion_rate
+        }, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
+# ── GET ALL USERS PROGRESS (admin) ──
+@app.route('/api/admin/progress', methods=['GET'])
+def get_all_progress():
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT U.user_id, U.username,
+               COUNT(CASE WHEN UP.status = 'completed' THEN 1 END) as completed,
+               ROUND(AVG(CASE WHEN UP.status = 'completed' THEN UP.score END)) as avg_score,
+               COUNT(UP.progress_id) as total_attempts
+        FROM USERS U
+        LEFT JOIN USER_PROGRESS UP ON U.user_id = UP.user_id
+        WHERE U.role = 'user'
+        GROUP BY U.user_id, U.username
+        ORDER BY completed DESC
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return app.response_class(
+        response=json.dumps([{
+            'user_id': r[0],
+            'username': r[1],
+            'completed': r[2],
+            'avg_score': r[3] or 0,
+            'total_attempts': r[4]
+        } for r in rows], ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+    
 if __name__ == '__main__':
     app.run(debug=True)
