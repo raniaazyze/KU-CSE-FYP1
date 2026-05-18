@@ -74,3 +74,4 @@ UPDATE USERS SET password = '$2b$12$G0uSPq2rec.f6.w6cs6pcOm.qdsg530V.TmnXRCF8otT
 UPDATE USERS SET password = '$2b$12$G0uSPq2rec.f6.w6cs6pcOm.qdsg530V.TmnXRCF8otTjQkfpFSBO' WHERE email = 'rania@email.com';
 
 SELECT email, password FROM USERS;
+SELECT lesson_id, sign_name, category_id FROM LESSONS;

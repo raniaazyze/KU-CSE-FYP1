@@ -4,6 +4,7 @@ from flask_cors import CORS
 import bcrypt
 import config
 import json
+import os
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -235,5 +236,53 @@ def get_all_progress():
         mimetype='application/json'
     )
     
+# ── UPLOAD GESTURE DATA ──
+@app.route('/api/gesture', methods=['POST'])
+def upload_gesture():
+    data = request.get_json()
+    lesson_id = data['lesson_id']
+    landmark_json = data['landmark_json']
+    try:
+        cur = mysql.connection.cursor()
+        # Check if gesture data already exists for this lesson
+        cur.execute("SELECT * FROM GESTURE_DATA WHERE lesson_id = %s", (lesson_id,))
+        existing = cur.fetchone()
+        if existing:
+            # Update existing
+            cur.execute("UPDATE GESTURE_DATA SET landmark_json = %s WHERE lesson_id = %s",
+                       (landmark_json, lesson_id))
+        else:
+            # Insert new
+            cur.execute("INSERT INTO GESTURE_DATA (lesson_id, landmark_json) VALUES (%s, %s)",
+                       (lesson_id, landmark_json))
+        mysql.connection.commit()
+        cur.close()
+        return app.response_class(
+            response=json.dumps({'message': '제스처 데이터 저장 완료 / Gesture data saved'}, ensure_ascii=False),
+            status=201,
+            mimetype='application/json'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# ── GET GESTURE DATA BY LESSON ──
+@app.route('/api/gesture/<int:lesson_id>', methods=['GET'])
+def get_gesture(lesson_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM GESTURE_DATA WHERE lesson_id = %s", (lesson_id,))
+    row = cur.fetchone()
+    cur.close()
+    if row:
+        return app.response_class(
+            response=json.dumps({
+                'gesture_id': row[0],
+                'lesson_id': row[1],
+                'landmark_json': row[2]
+            }, ensure_ascii=False),
+            status=200,
+            mimetype='application/json'
+        )
+    return jsonify({'error': '제스처 데이터 없음 / No gesture data found'}), 404
+
 if __name__ == '__main__':
     app.run(debug=True)
