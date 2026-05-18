@@ -1,5 +1,0 @@
-MYSQL_HOST = 'localhost'
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = 'root1234'
-MYSQL_DB = 'sueo_platform'
-SECRET_KEY = 'sueo_secret_key'
