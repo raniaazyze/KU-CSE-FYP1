@@ -497,7 +497,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ DASHBOARD (USER) ══ -->
 <div id="screen-dashboard" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn active" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -528,37 +528,9 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       </div>
     </div>
     <div class="section-title">카테고리별 진행도 / Progress by Category</div>
-    <div class="progress-item" onclick="showCategory('지문자')">
-      <div class="progress-icon">🤟</div>
-      <div class="progress-info">
-        <div class="progress-name">기본 손가락 철자 / Fingerspelling</div>
-        <div class="progress-count">10 / 26 완료</div>
-      </div>
-      <div class="progress-right">
-        <div class="progress-pct">38%</div>
-        <div class="bar-bg"><div class="bar-fill" style="width:38%"></div></div>
-      </div>
-    </div>
-    <div class="progress-item" onclick="showCategory('숫자')">
-      <div class="progress-icon">✌️</div>
-      <div class="progress-info">
-        <div class="progress-name">숫자 / Numbers</div>
-        <div class="progress-count">7 / 10 완료</div>
-      </div>
-      <div class="progress-right">
-        <div class="progress-pct">70%</div>
-        <div class="bar-bg"><div class="bar-fill" style="width:70%"></div></div>
-      </div>
-    </div>
-    <div class="progress-item" onclick="showCategory('인사')">
-      <div class="progress-icon">👋</div>
-      <div class="progress-info">
-        <div class="progress-name">인사 / Greetings</div>
-        <div class="progress-count">0 / 8 완료</div>
-      </div>
-      <div class="progress-right">
-        <div class="progress-pct">0%</div>
-        <div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div>
+    <div id="dashboard-category-list">
+      <div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px;">
+        로딩 중... / Loading...
       </div>
     </div>
     <button class="btn-all" onclick="goTo('lessons')">모든 레슨 보기 / View All Lessons →</button>
@@ -569,7 +541,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN DASHBOARD ══ -->
 <div id="screen-admin" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links">
       <button class="nav-btn active">🛡 관리자</button>
     </div>
@@ -630,7 +602,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PROGRESS SCREEN ══ -->
 <div id="screen-progress" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -672,7 +644,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LESSONS ══ -->
 <div id="screen-lessons" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn active" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -718,7 +690,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ SIGN LIST ══ -->
 <div id="screen-signs" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -734,7 +706,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LEARN ══ -->
 <div id="screen-learn" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -746,10 +718,20 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <div class="learn-title" id="learn-sign-name">HELLO</div>
     </div>
     <div class="learn-meta" id="learn-sign-sub">인사 표현 · 난이도: 쉬움 / Greetings · Easy</div>
-    <div class="demo-frame">
+    <div class="demo-frame" id="demo-frame">
       <div class="mode-badge">학습 모드 / Learn</div>
-      <div class="demo-emoji" id="learn-emoji">👋</div>
-      <div class="demo-label">▶ 시연 영상/이미지 영역 / Demo Area</div>
+      <!-- Video player (hidden by default) -->
+      <video id="demo-video" controls
+        style="width:100%;height:100%;object-fit:cover;display:none;border-radius:var(--radius-lg);">
+      </video>
+      <!-- Image (hidden by default) -->
+      <img id="demo-image"
+        style="width:100%;height:100%;object-fit:cover;display:none;border-radius:var(--radius-lg);"/>
+      <!-- Emoji fallback -->
+      <div id="demo-emoji-container" style="display:flex;flex-direction:column;align-items:center;">
+        <div class="demo-emoji" id="learn-emoji">👋</div>
+        <div class="demo-label">▶ 시연 영상/이미지 영역 / Demo Area</div>
+      </div>
     </div>
     <div class="learn-desc" id="learn-desc">손을 위로 들어 좌우로 흔드세요. 상대방을 향해 밝게 인사하는 동작입니다.</div>
     <button class="btn-practice" onclick="goTo('practice')">
@@ -761,7 +743,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PRACTICE ══ -->
 <div id="screen-practice" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼</div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('learn')"><span class="nav-icon">📖</span>학습</button>
     </div>
@@ -864,7 +846,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: ADD SIGN ══ -->
 <div id="screen-admin-add-sign" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">➕ 새 수어 추가</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -892,18 +874,83 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <div class="field-label">힌트 / Hint</div>
       <input class="field-input" type="text" placeholder="틀렸을 때 표시할 힌트 / Hint shown on failure" id="add-hint"/>
       <div class="field-label">시연 이미지/영상 업로드 / Demo Media</div>
-      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 기능 / File upload feature', 'info')">
-        <div style="font-size:28px;margin-bottom:6px;">📁</div>
-        <div style="font-size:12px;color:var(--text-dim);">이미지 또는 영상 업로드 / Upload image or video</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · MP4, JPG, PNG</div>
+      <input type="file" id="add-media-file" accept="video/*,image/*"
+        class="field-input" style="padding:8px;cursor:pointer;"/>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;">
+        MP4, MOV, JPG, PNG · 최대 30MB
       </div>
-      <div class="field-label">기준 랜드마크 데이터 / Reference Landmark JSON</div>
-      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('JSON 업로드 / JSON upload', 'info')">
-        <div style="font-size:28px;margin-bottom:6px;">📊</div>
-        <div style="font-size:12px;color:var(--text-dim);">랜드마크 JSON 업로드 / Upload landmark JSON</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · JSON</div>
+      <div id="add-media-preview" style="display:none;margin-bottom:14px;">
+        <video id="add-video-preview" controls
+          style="width:100%;border-radius:var(--radius-sm);max-height:200px;display:none;">
+        </video>
+        <img id="add-image-preview"
+          style="width:100%;border-radius:var(--radius-sm);max-height:200px;object-fit:cover;display:none;"/>
       </div>
-      <button class="btn-primary" onclick="doAddSign()">💾 저장 / Save Sign</button>
+  <div class="field-label">기준 랜드마크 캡처 / Capture Reference Landmark</div>
+
+  <!-- Camera capture section -->
+  <div id="admin-capture-section" style="margin-bottom:14px;">
+    <!-- Capture button to open camera -->
+    <button type="button" onclick="openAdminCapture()"
+      style="width:100%;background:var(--teal-dim);border:1px solid var(--teal-border);
+      border-radius:var(--radius-sm);padding:12px;color:var(--teal);
+      font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;
+      margin-bottom:10px;">
+    📷 카메라로 랜드마크 캡처 / Capture Landmark via Camera
+  </button>
+
+  <!-- Camera feed (hidden until opened) -->
+  <div id="admin-camera-container" style="display:none;margin-bottom:10px;">
+    <div style="display:flex;justify-content:center;">
+      <div style="position:relative;width:500px;height:500px;">
+        <video id="admin-webcam" autoplay playsinline
+          style="width:500px;height:500px;object-fit:cover;
+          border-radius:var(--radius-lg);
+          border:1px solid var(--border-mid);
+          position:absolute;top:0;left:0;">
+        </video>
+        <canvas id="admin-landmark-canvas"
+          style="position:absolute;top:0;left:0;
+          width:500px;height:500px;
+          border-radius:var(--radius-lg);
+          pointer-events:none;">
+        </canvas>
+      </div>
+    </div>
+    <div id="admin-hand-status"
+      style="text-align:center;font-size:12px;color:var(--text-dim);
+      margin-top:8px;font-family:var(--mono);">
+      손을 카메라에 보여주세요 / Show your hand
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto;">
+      <button type="button" onclick="captureAdminLandmark()"
+        style="flex:2;background:var(--teal);border:none;border-radius:var(--radius-sm);
+        padding:11px;color:var(--navy);font-family:var(--sans);
+        font-size:13px;font-weight:700;cursor:pointer;">
+        📸 캡처 / Capture
+      </button>
+      <button type="button" onclick="closeAdminCamera()"
+        style="flex:1;background:transparent;border:1px solid var(--border-mid);
+        border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
+        font-family:var(--sans);font-size:12px;cursor:pointer;">
+        취소 / Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- Captured status -->
+  <div id="admin-capture-status"
+    style="background:var(--navy);border:1px solid var(--border-faint);
+    border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
+    color:var(--text-dim);text-align:center;">
+    ❌ 랜드마크 미캡처 / Not captured yet
+  </div>
+</div>
+
+      <button class="btn-primary" onclick="doAddSign()" style="margin-top:14px;">
+        💾 저장 / Save Sign
+      </button>
     </div>
   </div>
 </div>
@@ -911,7 +958,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: EDIT SIGN ══ -->
 <div id="screen-admin-edit-sign" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">✏️ 수어 수정</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -961,7 +1008,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: DELETE SIGN ══ -->
 <div id="screen-admin-delete-sign" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">🗑 수어 삭제</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -993,7 +1040,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: ALL USERS ══ -->
 <div id="screen-admin-users" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">👥 사용자 목록</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -1008,7 +1055,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: ALL LESSONS LIST ══ -->
 <div id="screen-admin-lessons-list" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">📝 레슨 목록</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -1022,7 +1069,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ ADMIN: ALL PROGRESS ══ -->
 <div id="screen-admin-all-progress" class="screen">
   <div class="topnav">
-    <div class="logo">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
+    <div class="logo" onclick="goTo('admin')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">ADMIN</span></div>
     <div class="nav-links"><button class="nav-btn active">📊 진행 현황</button></div>
     <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
   </div>
@@ -1104,12 +1151,10 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw = document.getElementById('login-pw').value;
 
-  // Empty field check
   if (!email || !pw) {
     showToast('모든 필드를 입력해주세요 / Fill all fields', 'error'); return;
   }
 
-  // Email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     showToast('올바른 이메일 형식이 아닙니다 / Invalid email format', 'error'); return;
@@ -1119,17 +1164,14 @@ async function doLogin() {
     const res = await fetch(`${API}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pw })
+      body: JSON.stringify({
+        email,
+        password: pw,
+        role: currentRole    // ← send role to backend
+      })
     });
     const data = await res.json();
     if (res.ok) {
-      // Role mismatch check
-      if (currentRole === 'admin' && data.role !== 'admin') {
-        showToast('관리자 계정이 아닙니다 / This is not an admin account', 'error'); return;
-      }
-      if (currentRole === 'user' && data.role !== 'user') {
-        showToast('학습자 계정이 아닙니다 / This is not a learner account', 'error'); return;
-      }
       currentUser = data;
       showToast('로그인 성공! / Login successful!', 'success');
       if (data.role === 'admin') {
@@ -1213,14 +1255,28 @@ async function showCategory(catId, catName) {
       showToast('아직 레슨이 없습니다 / No lessons yet', 'info');
       return;
     }
+
+    // Emoji map for signs
+    const emojiMap = {
+      'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
+      'F':'🤘', 'G':'👉', 'H':'🤞', 'I':'🤙', 'J':'🤙',
+      'K':'✌️', 'L':'👆', 'M':'✊', 'N':'✊', 'O':'👌',
+      'P':'👇', 'Q':'👇', 'R':'🤞', 'S':'✊', 'T':'✊',
+      'U':'✌️', 'V':'✌️', 'W':'🤟', 'X':'👆', 'Y':'🤙', 'Z':'👆',
+      '1':'☝️', '2':'✌️', '3':'🤟', '4':'🖐', '5':'✋',
+      '6':'🤙', '7':'🖐', '8':'🤌', '9':'👌', '10':'🖐',
+      '안녕하세요':'👋', '감사합니다':'🙏', '반갑습니다':'🤝',
+      '이름':'🏷️', '밥':'🍚', '물':'💧'
+    };
+
     document.getElementById('signs-title').textContent = catName + ' — 수어 목록 / Signs';
     const c = document.getElementById('sign-list-container');
-    c.innerHTML = lessons.map((s, i) => `
+    c.innerHTML = lessons.map((s) => `
       <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-        <div class="sign-thumb">🤲</div>
+        <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
         <div class="sign-info">
           <div class="sign-name">${s.sign_name}</div>
-          <div class="sign-diff">난이도: ${s.difficulty}</div>
+          <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
         </div>
         <div class="sign-status-badge todo">
           <div class="status-dot todo"></div>미시작 / Todo
@@ -1248,15 +1304,45 @@ function showLearn(idx) {
 }
 
 function showLearnFromDB(lesson) {
+  const emojiMap = {
+    'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
+    '1':'☝️', '2':'✌️', '3':'🤟', '4':'🖐', '5':'✋',
+    '안녕하세요':'👋', '감사합니다':'🙏', '반갑습니다':'🤝',
+    '이름':'🏷️', '밥':'🍚', '물':'💧'
+  };
+  const emoji = emojiMap[lesson.sign_name] || '🤲';
+
   currentSign = lesson;
   document.getElementById('learn-sign-name').textContent = lesson.sign_name;
   document.getElementById('learn-sign-sub').textContent = currentCategory + ' · 난이도: ' + lesson.difficulty;
-  document.getElementById('learn-emoji').textContent = '🤲';
   document.getElementById('learn-desc').textContent = lesson.description || '설명 없음';
   document.getElementById('learn-back-btn').onclick = () => goTo('signs');
   document.getElementById('practice-back-btn').onclick = () => goTo('learn');
   document.getElementById('practice-title').textContent = '연습 / Practice: ' + lesson.sign_name;
-  document.getElementById('practice-emoji').textContent = '🤲';
+  document.getElementById('practice-emoji').textContent = emoji;
+
+  // Handle media display
+  const video = document.getElementById('demo-video');
+  const image = document.getElementById('demo-image');
+  const emojiContainer = document.getElementById('demo-emoji-container');
+  const learnEmoji = document.getElementById('learn-emoji');
+
+  // Reset all
+  video.style.display = 'none';
+  image.style.display = 'none';
+  emojiContainer.style.display = 'flex';
+  learnEmoji.textContent = emoji;
+
+  if (lesson.video_url) {
+    video.src = lesson.video_url;
+    video.style.display = 'block';
+    emojiContainer.style.display = 'none';
+  } else if (lesson.image_url) {
+    image.src = lesson.image_url;
+    image.style.display = 'block';
+    emojiContainer.style.display = 'none';
+  }
+
   resetPractice();
   goTo('learn');
 }
@@ -1478,6 +1564,123 @@ async function doCapture() {
   }
 }
 
+let adminCameraStream = null;
+let adminMpHands = null;
+let adminAnimationId = null;
+let capturedLandmarkData = null;
+
+async function openAdminCapture() {
+  const container = document.getElementById('admin-camera-container');
+  const video = document.getElementById('admin-webcam');
+  const canvas = document.getElementById('admin-landmark-canvas');
+  const ctx = canvas.getContext('2d');
+
+  container.style.display = 'block';
+
+  try {
+    adminCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 }
+    });
+    video.srcObject = adminCameraStream;
+
+    // Setup MediaPipe
+    adminMpHands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    adminMpHands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5
+    });
+
+    adminMpHands.onResults((results) => {
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (const landmarks of results.multiHandLandmarks) {
+          drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {
+            color: '#40E0D0', lineWidth: 2
+          });
+          drawLandmarks(ctx, landmarks, {
+            color: '#FFD700', lineWidth: 1, radius: 4
+          });
+        }
+        document.getElementById('admin-hand-status').textContent = '✅ 손 감지됨! SPACE 또는 캡처 버튼 / Hand detected!';
+        document.getElementById('admin-hand-status').style.color = 'var(--green-ok)';
+      } else {
+        document.getElementById('admin-hand-status').textContent = '❌ 손이 감지되지 않습니다 / No hand detected';
+        document.getElementById('admin-hand-status').style.color = 'var(--red-err)';
+      }
+    });
+
+    async function processAdminFrame() {
+      if (!adminCameraStream) return;
+      await adminMpHands.send({ image: video });
+      adminAnimationId = setTimeout(processAdminFrame, 50);
+    }
+
+    video.onloadedmetadata = () => { processAdminFrame(); };
+
+  } catch (err) {
+    showToast('카메라 오류 / Camera error', 'error');
+    container.style.display = 'none';
+  }
+}
+
+async function captureAdminLandmark() {
+  const video = document.getElementById('admin-webcam');
+
+  // Use Flask backend to extract landmarks
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+  try {
+    const res = await fetch(`${API}/extract-landmarks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+    const data = await res.json();
+
+    if (!data.detected) {
+      showToast('손이 감지되지 않았습니다 / No hand detected', 'error');
+      return;
+    }
+
+    // Store captured landmarks
+    capturedLandmarkData = data.landmarks;
+
+    // Update status
+    document.getElementById('admin-capture-status').innerHTML =
+      `✅ 랜드마크 캡처 완료! / Landmark captured! (${data.landmarks.length} points)`;
+    document.getElementById('admin-capture-status').style.color = 'var(--green-ok)';
+    document.getElementById('admin-capture-status').style.borderColor = 'rgba(46,204,113,0.3)';
+
+    showToast('랜드마크 캡처 완료! / Landmark captured!', 'success');
+    closeAdminCamera();
+
+  } catch (err) {
+    showToast('캡처 실패 / Capture failed', 'error');
+  }
+}
+
+function closeAdminCamera() {
+  if (adminAnimationId) { clearTimeout(adminAnimationId); adminAnimationId = null; }
+  if (adminMpHands) { adminMpHands.close(); adminMpHands = null; }
+  if (adminCameraStream) {
+    adminCameraStream.getTracks().forEach(t => t.stop());
+    adminCameraStream = null;
+  }
+  document.getElementById('admin-camera-container').style.display = 'none';
+}
+
 // ── ADMIN SUB-PAGE LOGIC ──
 let pendingDeleteKey = null;
 let editingSignKey = null;
@@ -1495,14 +1698,14 @@ function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
   if (screen === 'lessons') loadCategories();
-  if (screen === 'dashboard') loadUserStats();
+  if (screen === 'dashboard') { loadUserStats(); loadDashboardCategories(); }
   if (screen === 'progress') loadUserProgress();
   if (screen === 'admin-edit-sign') buildEditPicker();
   if (screen === 'admin-delete-sign') buildDeleteList();
   if (screen === 'admin-lessons-list') buildAllLessonsList();
   if (screen === 'admin-users') loadAdminUsers();
   if (screen === 'admin-all-progress') loadAdminProgress();
-  if (screen === 'admin') loadAdminProgress();
+  if (screen === 'admin') loadAdminStats();        // ← only loads stat cards
   if (screen === 'practice') startWebcam();
   if (screen !== 'practice') stopWebcam();
 }
@@ -1533,15 +1736,24 @@ async function loadAdminUsers() {
   }
 }
 
+async function loadAdminStats() {
+  try {
+    const statsRes = await fetch(`${API}/admin/stats`);
+    const stats = await statsRes.json();
+    // Only update admin dashboard stat cards
+    document.getElementById('admin-stat-users').textContent = stats.total_users;
+    document.getElementById('admin-stat-lessons').textContent = stats.total_lessons;
+    document.getElementById('admin-stat-completion').textContent = stats.completion_rate + '%';
+  } catch (err) {
+    console.log('Admin stats error:', err);
+  }
+}
+
 async function loadAdminProgress() {
   try {
     // Load admin stats
     const statsRes = await fetch(`${API}/admin/stats`);
     const stats = await statsRes.json();
-    // Also update admin dashboard stat cards
-    document.getElementById('admin-stat-users').textContent = stats.total_users;
-    document.getElementById('admin-stat-lessons').textContent = stats.total_lessons;
-    document.getElementById('admin-stat-completion').textContent = stats.completion_rate + '%';
     document.getElementById('admin-completion-rate').textContent = stats.completion_rate + '%';
     document.getElementById('admin-total-users').textContent = stats.total_users;
     document.getElementById('admin-total-lessons').textContent = stats.total_lessons;
@@ -1570,7 +1782,7 @@ async function loadAdminProgress() {
           </div>
         </div>
         <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">
-          ${u.completed}개 완료 · ${u.total_attempts}번 시도 / 
+          ${u.completed}개 완료 · ${u.total_attempts}번 시도 /
           ${u.completed} completed · ${u.total_attempts} attempts
         </div>
         <div class="bar-bg">
@@ -1637,18 +1849,87 @@ async function loadCategories() {
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
-    const iconMap = { '지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬' };
+    const iconMap = {'지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬'};
     const grid = document.querySelector('#screen-lessons .cat-grid');
-    grid.innerHTML = categories.map(cat => `
-      <div class="cat-card" onclick="showCategory(${cat.category_id}, '${cat.name}')">
-        <span class="cat-emoji">${iconMap[cat.name] || '🤲'}</span>
-        <div class="cat-name">${cat.name}</div>
-        <div class="cat-sub">${cat.description}</div>
-        <span class="cat-badge notstarted">시작하기</span>
-        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:0%"></div></div>
-      </div>`).join('');
+
+    // Get lessons count per category
+    const lessonsPerCat = {};
+    for (const cat of categories) {
+      const lRes = await fetch(`${API}/lessons/${cat.category_id}`);
+      const lessons = await lRes.json();
+      lessonsPerCat[cat.category_id] = lessons.length;
+    }
+
+    grid.innerHTML = categories.map(cat => {
+      const total = lessonsPerCat[cat.category_id] || 0;
+      return `
+        <div class="cat-card" onclick="showCategory(${cat.category_id}, '${cat.name}')">
+          <span class="cat-emoji">${iconMap[cat.name] || '🤲'}</span>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-sub">${cat.description} · ${total}개</div>
+          <span class="cat-badge notstarted">시작하기</span>
+          <div class="bar-bg" style="margin-top:8px;">
+            <div class="bar-fill" style="width:0%"></div>
+          </div>
+        </div>`;
+    }).join('');
   } catch (err) {
     showToast('카테고리 로드 실패 / Failed to load categories', 'error');
+  }
+}
+
+async function loadDashboardCategories() {
+  try {
+    const res = await fetch(`${API}/categories`);
+    const categories = await res.json();
+    const iconMap = {'지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬'};
+    const container = document.getElementById('dashboard-category-list');
+
+    // Get user progress
+    let completedLessons = [];
+    if (currentUser) {
+      try {
+        const progRes = await fetch(`${API}/progress/${currentUser.user_id}`);
+        completedLessons = await progRes.json();
+      } catch(e) {}
+    }
+
+    // Get lessons per category
+    const lessonsPerCat = {};
+    const lessonsByCat = {};
+    for (const cat of categories) {
+      const lRes = await fetch(`${API}/lessons/${cat.category_id}`);
+      const lessons = await lRes.json();
+      lessonsPerCat[cat.category_id] = lessons.length;
+      lessonsByCat[cat.category_id] = lessons.map(l => l.lesson_id);
+    }
+
+    container.innerHTML = categories.map(cat => {
+      const total = lessonsPerCat[cat.category_id] || 0;
+      const catLessonIds = lessonsByCat[cat.category_id] || [];
+      // Count only completed lessons that belong to this category
+      const completed = completedLessons.filter(p =>
+        catLessonIds.includes(p.lesson_id)
+      ).length;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return `
+        <div class="progress-item" onclick="showCategory(${cat.category_id}, '${cat.name}')">
+          <div class="progress-icon">${iconMap[cat.name] || '🤲'}</div>
+          <div class="progress-info">
+            <div class="progress-name">${cat.name} / ${cat.description}</div>
+            <div class="progress-count">${completed} / ${total} 완료</div>
+          </div>
+          <div class="progress-right">
+            <div class="progress-pct">${pct}%</div>
+            <div class="bar-bg">
+              <div class="bar-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.log('Dashboard category error:', err);
   }
 }
 
@@ -1658,9 +1939,18 @@ async function doAddSign() {
   const diff = document.getElementById('add-diff').value;
   const desc = document.getElementById('add-desc').value.trim();
   const hint = document.getElementById('add-hint').value.trim();
-  if (!name || !desc) { showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+
+  if (!name || !desc) {
+    showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return;
+  }
+  if (!capturedLandmarkData) {
+    showToast('랜드마크를 먼저 캡처하세요 / Please capture landmark first', 'error'); return;
+  }
+
   try {
     const catMap = {'지문자':1,'숫자':2,'인사':3,'일상':4};
+
+    // Step 1 — Add lesson
     const res = await fetch(`${API}/lessons`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -1673,17 +1963,43 @@ async function doAddSign() {
       })
     });
     const data = await res.json();
-    if (res.ok) {
-      showToast('새 수어 추가 완료! / Sign added!', 'success');
-      document.getElementById('add-name').value = '';
-      document.getElementById('add-desc').value = '';
-      document.getElementById('add-hint').value = '';
-      setTimeout(() => goTo('admin'), 800);
-    } else {
-      showToast(data.error || '추가 실패 / Failed to add', 'error');
-    }
+    if (!res.ok) { showToast(data.error || '추가 실패 / Failed', 'error'); return; }
+
+    const lessonId = data.lesson_id;
+
+    // Step 2 — Save landmark JSON to GESTURE_DATA
+    const landmarkJson = JSON.stringify({
+      sign_name: name,
+      category: cat,
+      hand: 'right',
+      landmarks: capturedLandmarkData
+    });
+
+    await fetch(`${API}/gesture`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        lesson_id: lessonId,
+        landmark_json: landmarkJson
+      })
+    });
+
+    showToast('새 수어 추가 완료! / Sign added with landmark!', 'success');
+
+    // Reset form
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-desc').value = '';
+    document.getElementById('add-hint').value = '';
+    capturedLandmarkData = null;
+    document.getElementById('admin-capture-status').innerHTML =
+      '❌ 랜드마크 미캡처 / Not captured yet';
+    document.getElementById('admin-capture-status').style.color = 'var(--text-dim)';
+
+    setTimeout(() => goTo('admin'), 800);
+
   } catch (err) {
     showToast('서버 오류 / Server error', 'error');
+    console.error(err);
   }
 }
 
