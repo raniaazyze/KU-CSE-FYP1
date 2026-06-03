@@ -497,7 +497,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ DASHBOARD (USER) ══ -->
 <div id="screen-dashboard" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn active" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -508,7 +508,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
   <div class="content">
     <div class="greeting-block">
       <div class="greeting" id="dash-greeting">안녕하세요! 👋</div>
-      <div class="greeting-sub">오늘도 수어를 연습해볼까요? / Ready to practice today?</div>
+      <div class="greeting-sub" id="dash-greeting-sub">오늘도 수어를 연습해볼까요? / Ready to practice today?</div>
     </div>
     <div class="stat-row">
       <div class="stat-card">
@@ -602,7 +602,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PROGRESS SCREEN ══ -->
 <div id="screen-progress" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -644,7 +644,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LESSONS ══ -->
 <div id="screen-lessons" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn active" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -690,7 +690,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ SIGN LIST ══ -->
 <div id="screen-signs" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -706,7 +706,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LEARN ══ -->
 <div id="screen-learn" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -743,7 +743,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PRACTICE ══ -->
 <div id="screen-practice" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('learn')"><span class="nav-icon">📖</span>학습</button>
     </div>
@@ -1179,6 +1179,7 @@ async function doLogin() {
         setTimeout(() => goTo('admin'), 600);
       } else {
         document.getElementById('dash-avatar').textContent = data.username[0].toUpperCase();
+        document.getElementById('dash-greeting').textContent = data.username + '님, 안녕하세요! 👋';
         setTimeout(() => goTo('dashboard'), 600);
       }
     } else {
@@ -1795,6 +1796,12 @@ async function loadAdminProgress() {
 }
 
 async function loadUserStats() {
+  const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const now = new Date();
+  const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}`;
+  document.getElementById('dash-greeting-sub').textContent =
+    `${dateStr} · 오늘도 수어를 연습해볼까요? / Ready to practice!`;
+
   if (!currentUser) return;
   try {
     const res = await fetch(`${API}/stats/${currentUser.user_id}`);
