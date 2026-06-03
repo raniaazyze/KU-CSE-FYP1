@@ -33,12 +33,36 @@ def login():
     data = request.get_json()
     email = data['email']
     password = data['password']
+    requested_role = data.get('role', 'user')
+
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM USERS WHERE email = %s", (email,))
     user = cur.fetchone()
     cur.close()
+
     if not user:
-        return jsonify({'error': '이메일을 찾을 수 없습니다 / Email not found'}), 401
+        return app.response_class(
+            response=json.dumps({'error': '이메일을 찾을 수 없습니다 / Email not found'}, ensure_ascii=False),
+            status=401,
+            mimetype='application/json'
+        )
+
+    # Check role mismatch BEFORE password
+    if user[4] != requested_role:
+        if requested_role == 'admin':
+            return app.response_class(
+                response=json.dumps({'error': '관리자 계정이 아닙니다 / This is not an admin account'}, ensure_ascii=False),
+                status=403,
+                mimetype='application/json'
+            )
+        else:
+            return app.response_class(
+                response=json.dumps({'error': '학습자 계정이 아닙니다 / This is not a learner account'}, ensure_ascii=False),
+                status=403,
+                mimetype='application/json'
+            )
+
+    # Check password
     try:
         password_match = bcrypt.checkpw(
             password.encode('utf-8'),
@@ -46,14 +70,23 @@ def login():
         )
     except Exception:
         password_match = False
+
     if password_match:
-        return jsonify({
-            'message': '로그인 성공 / Login successful',
-            'user_id': user[0],
-            'username': user[1],
-            'role': user[4]
-        }), 200
-    return jsonify({'error': '비밀번호가 틀렸습니다 / Wrong password'}), 401
+        return app.response_class(
+            response=json.dumps({
+                'message': '로그인 성공 / Login successful',
+                'user_id': user[0],
+                'username': user[1],
+                'role': user[4]
+            }, ensure_ascii=False),
+            status=200,
+            mimetype='application/json'
+        )
+    return app.response_class(
+        response=json.dumps({'error': '비밀번호가 틀렸습니다 / Wrong password'}, ensure_ascii=False),
+        status=401,
+        mimetype='application/json'
+    )
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -61,7 +94,7 @@ def register():
     username = data['username']
     email = data['email']
     password = data['password']
-    role = data.get('role', 'user')
+    role = 'user'  # ← Always force role to 'user' on public registration
 
     # Check duplicate email
     cur = mysql.connection.cursor()
@@ -69,7 +102,11 @@ def register():
     existing = cur.fetchone()
     if existing:
         cur.close()
-        return jsonify({'error': '이미 등록된 이메일입니다 / Email already registered'}), 400
+        return app.response_class(
+            response=json.dumps({'error': '이미 등록된 이메일입니다 / Email already registered'}, ensure_ascii=False),
+            status=400,
+            mimetype='application/json'
+        )
 
     hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
     hashed_str = hashed.decode('utf-8')
@@ -78,9 +115,17 @@ def register():
                     (username, email, hashed_str, role))
         mysql.connection.commit()
         cur.close()
-        return jsonify({'message': '가입 완료 / Registered'}), 201
+        return app.response_class(
+            response=json.dumps({'message': '가입 완료 / Registered'}, ensure_ascii=False),
+            status=201,
+            mimetype='application/json'
+        )
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return app.response_class(
+            response=json.dumps({'error': str(e)}, ensure_ascii=False),
+            status=400,
+            mimetype='application/json'
+        )
 
 @app.route('/api/categories', methods=['GET'])
 def get_categories():
@@ -234,9 +279,9 @@ def get_admin_stats():
     cur.close()
     return app.response_class(
         response=json.dumps({
-            'total_users': total_users,
-            'total_lessons': total_lessons,
-            'completion_rate': completion_rate
+            'total_users': int(total_users),
+            'total_lessons': int(total_lessons),
+            'completion_rate': int(completion_rate) if completion_rate else 0
         }, ensure_ascii=False),
         status=200,
         mimetype='application/json'
@@ -260,16 +305,16 @@ def get_all_progress():
     rows = cur.fetchall()
     cur.close()
     return app.response_class(
-        response=json.dumps([{
-            'user_id': r[0],
-            'username': r[1],
-            'completed': r[2],
-            'avg_score': r[3] or 0,
-            'total_attempts': r[4]
-        } for r in rows], ensure_ascii=False),
-        status=200,
-        mimetype='application/json'
-    )
+    response=json.dumps([{
+        'user_id': r[0],
+        'username': r[1],
+        'completed': int(r[2]) if r[2] else 0,
+        'avg_score': int(r[3]) if r[3] else 0,
+        'total_attempts': int(r[4]) if r[4] else 0
+    } for r in rows], ensure_ascii=False),
+    status=200,
+    mimetype='application/json'
+)
     
 # ── UPLOAD GESTURE DATA ──
 @app.route('/api/gesture', methods=['POST'])
