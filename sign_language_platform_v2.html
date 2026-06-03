@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>수어 학습 플랫폼 v2</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  
+  <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -318,7 +322,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 /* ── PRACTICE ── */
 .webcam-frame {
   background: var(--navy-mid); border: 1px solid var(--border-mid);
-  border-radius: var(--radius-lg); aspect-ratio: 4/3;
+  border-radius: var(--radius-lg);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   margin-bottom: 14px; position: relative; overflow: hidden;
 }
@@ -767,10 +771,38 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
     <button class="back-btn" id="practice-back-btn">← 학습으로 / Back to Learn</button>
     <div class="section-title" id="practice-title">연습 / Practice: HELLO</div>
 
-    <div class="webcam-frame">
-      <div class="webcam-icon">📷</div>
-      <div class="webcam-hint">웹캠 피드 영역 / Webcam Feed (MediaPipe)</div>
-      <div class="mediapipe-tag">MediaPipe ready</div>
+    <!-- WEBCAM -->
+    <div style="display:flex;justify-content:center;margin-bottom:14px;">
+      <div style="position:relative;width:500px;height:500px;">
+        <video id="webcam-video" autoplay playsinline
+          style="width:500px;height:500px;object-fit:cover;
+          border-radius:var(--radius-lg);
+          border:1px solid var(--border-mid);
+          background:var(--navy-mid);
+          position:absolute;top:0;left:0;">
+        </video>
+        <!-- Overlay canvas for drawing landmarks -->
+        <canvas id="landmark-canvas"
+          style="position:absolute;top:0;left:0;
+          width:500px;height:500px;
+          border-radius:var(--radius-lg);
+          pointer-events:none;">
+        </canvas>
+        <!-- Hidden canvas for capture -->
+        <canvas id="webcam-canvas" style="display:none;"></canvas>
+        <div style="position:absolute;bottom:10px;right:10px;
+          background:rgba(0,28,61,0.85);border:1px solid var(--border-faint);
+          color:var(--teal);font-size:9px;padding:3px 9px;
+          border-radius:var(--radius-sm);font-family:var(--mono);z-index:10;">
+          MediaPipe Live
+        </div>
+        <div id="webcam-status" style="position:absolute;top:10px;left:10px;
+          background:rgba(0,28,61,0.85);border:1px solid var(--border-faint);
+          color:var(--text-dim);font-size:11px;padding:4px 10px;
+          border-radius:var(--radius-sm);z-index:10;">
+          📷 카메라 시작 중... / Starting camera...
+        </div>
+      </div>
     </div>
 
     <!-- ATTEMPT TRACKER -->
@@ -783,7 +815,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       </div>
     </div>
 
-    <!-- HINT BOX (shows after 3 fails) -->
+    <!-- HINT BOX -->
     <div class="hint-box" id="hint-box">
       <div class="hint-icon">💡</div>
       <div class="hint-text">
@@ -799,8 +831,13 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       </div>
       <div class="ref-box" style="flex:2">
         <div class="ref-label">손 인식 상태 / Hand Status</div>
-        <div style="font-size:13px;color:var(--teal);font-family:var(--mono);margin-top:4px;" id="hand-status">대기 중... / Waiting</div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">손을 카메라에 보여주세요 / Show your hand</div>
+        <div style="font-size:13px;color:var(--teal);
+          font-family:var(--mono);margin-top:4px;" id="hand-status">
+          대기 중... / Waiting
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">
+          손을 카메라에 보여주세요 / Show your hand
+        </div>
       </div>
     </div>
 
@@ -819,11 +856,10 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
         📸 캡처 / Capture
       </button>
       <button class="btn-sec" onclick="resetPractice()">↺ 리셋</button>
-      <button class="btn-sec" onclick="goTo('learn')">← 학습</button>
+      <button class="btn-sec" onclick="stopWebcam(); goTo('learn')">← 학습</button>
     </div>
   </div>
 </div>
-
 
 <!-- ══ ADMIN: ADD SIGN ══ -->
 <div id="screen-admin-add-sign" class="screen">
@@ -1251,50 +1287,195 @@ function setFeedback(type, icon, headline, sub, score) {
   scoreEl.textContent = score;
 }
 
-function doCapture() {
-  const score = Math.floor(Math.random() * 40) + 60;
-  const dotIdx = attemptCount % 3;
-  const dot = document.getElementById('dot-'+dotIdx);
-  document.getElementById('hand-status').textContent = '손 감지됨 ✓ / Hand detected ✓';
-  if (score >= 80) {
-    if(dot) dot.className = 'attempt-dot pass';
-    setFeedback(
-      'success', '✅',
-      '✓ 정답! / Correct!',
-      '훌륭해요! 다음 수어로 넘어가보세요 / Great job! Move to the next sign',
-      score + '%'
-    );
-    showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
-    // Save to database
-    if (currentUser && currentSign) {
-      fetch(`${API}/progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: currentUser.user_id,
-          lesson_id: currentSign.lesson_id,
-          score: score,
-          status: score >= 80 ? 'completed' : 'in_progress'
-        })
-      });
+let webcamStream = null;
+let mpHands = null;
+let animationId = null;
+
+async function startWebcam() {
+  try {
+    const video = document.getElementById('webcam-video');
+    const canvas = document.getElementById('landmark-canvas');
+    const ctx = canvas.getContext('2d');
+
+    webcamStream = await navigator.mediaDevices.getUserMedia({
+      video: { 
+        width: 500, 
+        height: 500,
+        facingMode: 'user'  // front camera, no mirror
+      }
+    });
+    video.srcObject = webcamStream;
+
+    document.getElementById('webcam-status').textContent = '✅ 카메라 활성 / Camera Active';
+    document.getElementById('webcam-status').style.color = 'var(--green-ok)';
+
+    // Set canvas size
+    canvas.width = 500;
+    canvas.height = 500;
+
+    // Setup MediaPipe Hands
+    mpHands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    mpHands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5
+    });
+
+    mpHands.onResults((results) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      // No mirroring needed anymore
+      for (const landmarks of results.multiHandLandmarks) {
+        drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {
+          color: '#40E0D0', lineWidth: 2
+        });
+        drawLandmarks(ctx, landmarks, {
+          color: '#FFD700', lineWidth: 1, radius: 4
+        });
+      }
+      document.getElementById('hand-status').textContent = '✅ 손 감지됨 / Hand detected';
+    } else {
+      document.getElementById('hand-status').textContent = '대기 중... / Waiting';
     }
-    failCount = 0;
-  } else {
-    if(dot) dot.className = 'attempt-dot fail';
-    failCount++;
-    setFeedback(
-      'fail', '❌',
-      '✗ 다시 시도 / Try Again',
-      '조금 더 연습해보세요 / Keep practicing!',
-      score + '%'
-    );
-    showToast('다시 시도해보세요 / Try again (' + score + '%)', 'error');
-    if (failCount >= 3 && currentSign) {
-      document.getElementById('hint-box').className = 'hint-box visible';
-      document.getElementById('hint-content').textContent = currentSign.hint || '손 위치를 조정해보세요 / Adjust your hand position';
+  });
+
+    // Process frames every 100ms instead of every frame
+    async function processFrame() {
+      if (!webcamStream) return;
+      await mpHands.send({ image: video });
+      animationId = setTimeout(processFrame, 50);
     }
+
+    video.onloadedmetadata = () => {
+      processFrame();
+    };
+
+  } catch (err) {
+    document.getElementById('webcam-status').textContent = '❌ 카메라 오류 / Camera Error';
+    showToast('카메라를 찾을 수 없습니다 / Cannot access camera', 'error');
+    console.error(err);
   }
-  attemptCount++;
+}
+
+function stopWebcam() {
+  if (animationId) {
+    clearTimeout(animationId);
+    animationId = null;
+  }
+  if (mpHands) {
+    mpHands.close();
+    mpHands = null;
+  }
+  if (webcamStream) {
+    webcamStream.getTracks().forEach(track => track.stop());
+    webcamStream = null;
+  }
+  const canvas = document.getElementById('landmark-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function captureFrame() {
+  const video = document.getElementById('webcam-video');
+  const canvas = document.getElementById('webcam-canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  // No mirroring — draw normally
+  ctx.drawImage(video, 0, 0);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
+
+async function doCapture() {
+  if (!webcamStream) {
+    showToast('카메라가 활성화되지 않았습니다 / Camera not active', 'error');
+    return;
+  }
+  if (!currentSign || !currentSign.lesson_id) {
+    showToast('레슨을 선택해주세요 / Please select a lesson', 'error');
+    return;
+  }
+
+  document.getElementById('hand-status').textContent = '분석 중... / Analyzing...';
+  showToast('분석 중... / Analyzing...', 'info');
+
+  const imageData = captureFrame();
+  const dotIdx = attemptCount % 3;
+  const dot = document.getElementById('dot-' + dotIdx);
+
+  try {
+    const res = await fetch(`${API}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lesson_id: currentSign.lesson_id,
+        image: imageData
+      })
+    });
+    const data = await res.json();
+
+    if (!data.detected) {
+      document.getElementById('hand-status').textContent = '❌ 손 미감지 / No hand';
+      setFeedback('fail', '🤲', '손이 감지되지 않았습니다', '손을 카메라에 잘 보이게 해주세요 / Show your hand clearly', '—');
+      showToast('손을 카메라에 보여주세요 / Show your hand', 'error');
+      return;
+    }
+
+    const score = data.score;
+    document.getElementById('hand-status').textContent = '✅ 손 감지됨 / Hand detected';
+
+    if (score >= 70) {
+      if (dot) dot.className = 'attempt-dot pass';
+      setFeedback(
+        'success', '✅',
+        '✓ 정답! / Correct!',
+        '훌륭해요! 다음 수어로 넘어가보세요 / Great job!',
+        score + '%'
+      );
+      showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
+      // Save to DB
+      if (currentUser && currentSign) {
+        fetch(`${API}/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: currentUser.user_id,
+            lesson_id: currentSign.lesson_id,
+            score: score,
+            status: 'completed'
+          })
+        });
+      }
+      failCount = 0;
+    } else {
+      if (dot) dot.className = 'attempt-dot fail';
+      failCount++;
+      setFeedback(
+        'fail', '❌',
+        '✗ 다시 시도 / Try Again',
+        '조금 더 연습해보세요 / Keep practicing!',
+        score + '%'
+      );
+      showToast('다시 시도해보세요 / Try again (' + score + '%)', 'error');
+      if (failCount >= 3 && currentSign) {
+        document.getElementById('hint-box').className = 'hint-box visible';
+        document.getElementById('hint-content').textContent =
+          currentSign.hint || '손 위치를 조정해보세요 / Adjust your hand position';
+      }
+    }
+    attemptCount++;
+
+  } catch (err) {
+    showToast('서버 오류 / Server error', 'error');
+    console.error(err);
+  }
 }
 
 // ── ADMIN SUB-PAGE LOGIC ──
@@ -1322,6 +1503,8 @@ function goTo(screen) {
   if (screen === 'admin-users') loadAdminUsers();
   if (screen === 'admin-all-progress') loadAdminProgress();
   if (screen === 'admin') loadAdminProgress();
+  if (screen === 'practice') startWebcam();
+  if (screen !== 'practice') stopWebcam();
 }
 
 async function loadAdminUsers() {

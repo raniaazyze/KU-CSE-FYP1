@@ -5,6 +5,11 @@ import bcrypt
 import config
 import json
 import os
+import cv2
+import mediapipe as mp
+import numpy as np
+import base64
+import json
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -284,5 +289,135 @@ def get_gesture(lesson_id):
         )
     return jsonify({'error': '제스처 데이터 없음 / No gesture data found'}), 404
 
+# ── MEDIAPIPE SETUP ──
+mp_hands = mp.solutions.hands
+hands_detector = mp_hands.Hands(
+    static_image_mode=True,
+    max_num_hands=1,
+    min_detection_confidence=0.5
+)
+
+def calculate_similarity(user_landmarks, ref_landmarks):
+    """Calculate similarity between two sets of landmarks"""
+    if not user_landmarks or not ref_landmarks:
+        return 0
+    
+    try:
+        # Normalize landmarks relative to wrist (point 0)
+        def normalize(landmarks):
+            wrist = landmarks[0]
+            normalized = []
+            for lm in landmarks:
+                normalized.append({
+                    'x': lm['x'] - wrist['x'],
+                    'y': lm['y'] - wrist['y'],
+                    'z': lm['z'] - wrist['z']
+                })
+            return normalized
+
+        user_norm = normalize(user_landmarks)
+        ref_norm = normalize(ref_landmarks)
+
+        # Calculate distance between each landmark
+        total_distance = 0
+        for u, r in zip(user_norm, ref_norm):
+            dist = (
+                (u['x'] - r['x']) ** 2 +
+                (u['y'] - r['y']) ** 2 +
+                (u['z'] - r['z']) ** 2
+            ) ** 0.5
+            total_distance += dist
+
+        # Average distance across all 21 points
+        avg_distance = total_distance / len(user_norm)
+
+        # Convert to similarity score (0-100)
+        # Lower distance = higher similarity
+        similarity = max(0, 100 - (avg_distance * 300))
+        return round(similarity)
+
+    except Exception as e:
+        print(f"Similarity error: {e}")
+        return 0
+
+# ── ANALYZE GESTURE FROM WEBCAM FRAME ──
+@app.route('/api/analyze', methods=['POST'])
+def analyze_gesture():
+    try:
+        data = request.get_json()
+        lesson_id = data['lesson_id']
+        image_data = data['image']  # base64 image from browser
+
+        # Decode base64 image
+        image_data = image_data.split(',')[1]
+        image_bytes = base64.b64decode(image_data)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return jsonify({'error': 'Invalid image'}), 400
+
+        # Run MediaPipe on the frame
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        result = hands_detector.process(rgb)
+
+        if not result.multi_hand_landmarks:
+            return app.response_class(
+                response=json.dumps({
+                    'detected': False,
+                    'message': '손이 감지되지 않았습니다 / No hand detected',
+                    'score': 0
+                }, ensure_ascii=False),
+                status=200,
+                mimetype='application/json'
+            )
+
+        # Extract user landmarks
+        user_landmarks = []
+        for lm in result.multi_hand_landmarks[0].landmark:
+            user_landmarks.append({
+                'x': round(lm.x, 4),
+                'y': round(lm.y, 4),
+                'z': round(lm.z, 4)
+            })
+
+        # Get reference landmarks from DB
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT landmark_json FROM GESTURE_DATA WHERE lesson_id = %s", (lesson_id,))
+        row = cur.fetchone()
+        cur.close()
+
+        if not row:
+            return app.response_class(
+                response=json.dumps({
+                    'detected': True,
+                    'message': '기준 데이터 없음 / No reference data',
+                    'score': 0
+                }, ensure_ascii=False),
+                status=200,
+                mimetype='application/json'
+            )
+
+        # Parse reference landmarks
+        ref_data = json.loads(row[0])
+        ref_landmarks = ref_data['landmarks']
+
+        # Calculate similarity
+        score = calculate_similarity(user_landmarks, ref_landmarks)
+
+        return app.response_class(
+            response=json.dumps({
+                'detected': True,
+                'score': score,
+                'message': '정답! / Correct!' if score >= 70 else '다시 시도 / Try Again'
+            }, ensure_ascii=False),
+            status=200,
+            mimetype='application/json'
+        )
+
+    except Exception as e:
+        print(f"Analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
