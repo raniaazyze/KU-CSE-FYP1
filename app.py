@@ -187,14 +187,15 @@ def save_progress():
 def get_progress(user_id):
     cur = mysql.connection.cursor()
     cur.execute("""
-        SELECT UP.lesson_id, L.sign_name, 
-               MAX(UP.score) as best_score, 
-               UP.status, 
-               MAX(UP.attempted_at) as last_attempt
+        SELECT UP.lesson_id, L.sign_name,
+               MAX(UP.score) as best_score,
+               UP.status,
+               MAX(UP.attempted_at) as last_attempt,
+               L.category_id
         FROM USER_PROGRESS UP
         JOIN LESSONS L ON UP.lesson_id = L.lesson_id
         WHERE UP.user_id = %s AND UP.status = 'completed'
-        GROUP BY UP.lesson_id, L.sign_name, UP.status
+        GROUP BY UP.lesson_id, L.sign_name, UP.status, L.category_id
         ORDER BY last_attempt DESC
     """, (user_id,))
     rows = cur.fetchall()
@@ -203,9 +204,10 @@ def get_progress(user_id):
         response=json.dumps([{
             'lesson_id': r[0],
             'sign_name': r[1],
-            'score': r[2],
+            'score': int(r[2]) if r[2] else 0,
             'status': r[3],
-            'attempted_at': str(r[4])
+            'attempted_at': str(r[4]),
+            'category_id': r[5]
         } for r in rows], ensure_ascii=False),
         status=200,
         mimetype='application/json'

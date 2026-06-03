@@ -1180,14 +1180,28 @@ async function showCategory(catId, catName) {
       showToast('아직 레슨이 없습니다 / No lessons yet', 'info');
       return;
     }
+
+    // Emoji map for signs
+    const emojiMap = {
+      'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
+      'F':'🤘', 'G':'👉', 'H':'🤞', 'I':'🤙', 'J':'🤙',
+      'K':'✌️', 'L':'👆', 'M':'✊', 'N':'✊', 'O':'👌',
+      'P':'👇', 'Q':'👇', 'R':'🤞', 'S':'✊', 'T':'✊',
+      'U':'✌️', 'V':'✌️', 'W':'🤟', 'X':'👆', 'Y':'🤙', 'Z':'👆',
+      '1':'☝️', '2':'✌️', '3':'🤟', '4':'🖐', '5':'✋',
+      '6':'🤙', '7':'🖐', '8':'🤌', '9':'👌', '10':'🖐',
+      '안녕하세요':'👋', '감사합니다':'🙏', '반갑습니다':'🤝',
+      '이름':'🏷️', '밥':'🍚', '물':'💧'
+    };
+
     document.getElementById('signs-title').textContent = catName + ' — 수어 목록 / Signs';
     const c = document.getElementById('sign-list-container');
-    c.innerHTML = lessons.map((s, i) => `
+    c.innerHTML = lessons.map((s) => `
       <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-        <div class="sign-thumb">🤲</div>
+        <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
         <div class="sign-info">
           <div class="sign-name">${s.sign_name}</div>
-          <div class="sign-diff">난이도: ${s.difficulty}</div>
+          <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
         </div>
         <div class="sign-status-badge todo">
           <div class="status-dot todo"></div>미시작 / Todo
@@ -1215,15 +1229,23 @@ function showLearn(idx) {
 }
 
 function showLearnFromDB(lesson) {
+  const emojiMap = {
+    'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
+    '1':'☝️', '2':'✌️', '3':'🤟', '4':'🖐', '5':'✋',
+    '안녕하세요':'👋', '감사합니다':'🙏', '반갑습니다':'🤝',
+    '이름':'🏷️', '밥':'🍚', '물':'💧'
+  };
+  const emoji = emojiMap[lesson.sign_name] || '🤲';
+
   currentSign = lesson;
   document.getElementById('learn-sign-name').textContent = lesson.sign_name;
   document.getElementById('learn-sign-sub').textContent = currentCategory + ' · 난이도: ' + lesson.difficulty;
-  document.getElementById('learn-emoji').textContent = '🤲';
+  document.getElementById('learn-emoji').textContent = emoji;
   document.getElementById('learn-desc').textContent = lesson.description || '설명 없음';
   document.getElementById('learn-back-btn').onclick = () => goTo('signs');
   document.getElementById('practice-back-btn').onclick = () => goTo('learn');
   document.getElementById('practice-title').textContent = '연습 / Practice: ' + lesson.sign_name;
-  document.getElementById('practice-emoji').textContent = '🤲';
+  document.getElementById('practice-emoji').textContent = emoji;
   resetPractice();
   goTo('learn');
 }
@@ -1613,16 +1635,30 @@ async function loadCategories() {
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
-    const iconMap = { '지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬' };
+    const iconMap = {'지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬'};
     const grid = document.querySelector('#screen-lessons .cat-grid');
-    grid.innerHTML = categories.map(cat => `
-      <div class="cat-card" onclick="showCategory(${cat.category_id}, '${cat.name}')">
-        <span class="cat-emoji">${iconMap[cat.name] || '🤲'}</span>
-        <div class="cat-name">${cat.name}</div>
-        <div class="cat-sub">${cat.description}</div>
-        <span class="cat-badge notstarted">시작하기</span>
-        <div class="bar-bg" style="margin-top:8px;"><div class="bar-fill" style="width:0%"></div></div>
-      </div>`).join('');
+
+    // Get lessons count per category
+    const lessonsPerCat = {};
+    for (const cat of categories) {
+      const lRes = await fetch(`${API}/lessons/${cat.category_id}`);
+      const lessons = await lRes.json();
+      lessonsPerCat[cat.category_id] = lessons.length;
+    }
+
+    grid.innerHTML = categories.map(cat => {
+      const total = lessonsPerCat[cat.category_id] || 0;
+      return `
+        <div class="cat-card" onclick="showCategory(${cat.category_id}, '${cat.name}')">
+          <span class="cat-emoji">${iconMap[cat.name] || '🤲'}</span>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-sub">${cat.description} · ${total}개</div>
+          <span class="cat-badge notstarted">시작하기</span>
+          <div class="bar-bg" style="margin-top:8px;">
+            <div class="bar-fill" style="width:0%"></div>
+          </div>
+        </div>`;
+    }).join('');
   } catch (err) {
     showToast('카테고리 로드 실패 / Failed to load categories', 'error');
   }
@@ -1632,22 +1668,54 @@ async function loadDashboardCategories() {
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
-    const iconMap = {'지문자':'🤟','숫자':'✌️','인사':'👋','일상':'💬'};
+    const iconMap = {'지문자':'🤟', '숫자':'✌️', '인사':'👋', '일상':'💬'};
     const container = document.getElementById('dashboard-category-list');
-    container.innerHTML = categories.map(cat => `
-      <div class="progress-item" onclick="showCategory(${cat.category_id}, '${cat.name}')">
-        <div class="progress-icon">${iconMap[cat.name] || '🤲'}</div>
-        <div class="progress-info">
-          <div class="progress-name">${cat.name} / ${cat.description}</div>
-          <div class="progress-count">레슨 선택하기 / Click to view lessons</div>
-        </div>
-        <div class="progress-right">
-          <div class="progress-pct">→</div>
-          <div class="bar-bg"><div class="bar-fill" style="width:0%"></div></div>
-        </div>
-      </div>`).join('');
+
+    // Get user progress
+    let completedLessons = [];
+    if (currentUser) {
+      try {
+        const progRes = await fetch(`${API}/progress/${currentUser.user_id}`);
+        completedLessons = await progRes.json();
+      } catch(e) {}
+    }
+
+    // Get lessons per category
+    const lessonsPerCat = {};
+    const lessonsByCat = {};
+    for (const cat of categories) {
+      const lRes = await fetch(`${API}/lessons/${cat.category_id}`);
+      const lessons = await lRes.json();
+      lessonsPerCat[cat.category_id] = lessons.length;
+      lessonsByCat[cat.category_id] = lessons.map(l => l.lesson_id);
+    }
+
+    container.innerHTML = categories.map(cat => {
+      const total = lessonsPerCat[cat.category_id] || 0;
+      const catLessonIds = lessonsByCat[cat.category_id] || [];
+      // Count only completed lessons that belong to this category
+      const completed = completedLessons.filter(p =>
+        catLessonIds.includes(p.lesson_id)
+      ).length;
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return `
+        <div class="progress-item" onclick="showCategory(${cat.category_id}, '${cat.name}')">
+          <div class="progress-icon">${iconMap[cat.name] || '🤲'}</div>
+          <div class="progress-info">
+            <div class="progress-name">${cat.name} / ${cat.description}</div>
+            <div class="progress-count">${completed} / ${total} 완료</div>
+          </div>
+          <div class="progress-right">
+            <div class="progress-pct">${pct}%</div>
+            <div class="bar-bg">
+              <div class="bar-fill" style="width:${pct}%"></div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
   } catch (err) {
-    console.log('Category load error:', err);
+    console.log('Dashboard category error:', err);
   }
 }
 
