@@ -718,10 +718,20 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <div class="learn-title" id="learn-sign-name">HELLO</div>
     </div>
     <div class="learn-meta" id="learn-sign-sub">인사 표현 · 난이도: 쉬움 / Greetings · Easy</div>
-    <div class="demo-frame">
+    <div class="demo-frame" id="demo-frame">
       <div class="mode-badge">학습 모드 / Learn</div>
-      <div class="demo-emoji" id="learn-emoji">👋</div>
-      <div class="demo-label">▶ 시연 영상/이미지 영역 / Demo Area</div>
+      <!-- Video player (hidden by default) -->
+      <video id="demo-video" controls
+        style="width:100%;height:100%;object-fit:cover;display:none;border-radius:var(--radius-lg);">
+      </video>
+      <!-- Image (hidden by default) -->
+      <img id="demo-image"
+        style="width:100%;height:100%;object-fit:cover;display:none;border-radius:var(--radius-lg);"/>
+      <!-- Emoji fallback -->
+      <div id="demo-emoji-container" style="display:flex;flex-direction:column;align-items:center;">
+        <div class="demo-emoji" id="learn-emoji">👋</div>
+        <div class="demo-label">▶ 시연 영상/이미지 영역 / Demo Area</div>
+      </div>
     </div>
     <div class="learn-desc" id="learn-desc">손을 위로 들어 좌우로 흔드세요. 상대방을 향해 밝게 인사하는 동작입니다.</div>
     <button class="btn-practice" onclick="goTo('practice')">
@@ -864,18 +874,83 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <div class="field-label">힌트 / Hint</div>
       <input class="field-input" type="text" placeholder="틀렸을 때 표시할 힌트 / Hint shown on failure" id="add-hint"/>
       <div class="field-label">시연 이미지/영상 업로드 / Demo Media</div>
-      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 기능 / File upload feature', 'info')">
-        <div style="font-size:28px;margin-bottom:6px;">📁</div>
-        <div style="font-size:12px;color:var(--text-dim);">이미지 또는 영상 업로드 / Upload image or video</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · MP4, JPG, PNG</div>
+      <input type="file" id="add-media-file" accept="video/*,image/*"
+        class="field-input" style="padding:8px;cursor:pointer;"/>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:-10px;margin-bottom:14px;">
+        MP4, MOV, JPG, PNG · 최대 30MB
       </div>
-      <div class="field-label">기준 랜드마크 데이터 / Reference Landmark JSON</div>
-      <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:20px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('JSON 업로드 / JSON upload', 'info')">
-        <div style="font-size:28px;margin-bottom:6px;">📊</div>
-        <div style="font-size:12px;color:var(--text-dim);">랜드마크 JSON 업로드 / Upload landmark JSON</div>
-        <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">최대 30MB · JSON</div>
+      <div id="add-media-preview" style="display:none;margin-bottom:14px;">
+        <video id="add-video-preview" controls
+          style="width:100%;border-radius:var(--radius-sm);max-height:200px;display:none;">
+        </video>
+        <img id="add-image-preview"
+          style="width:100%;border-radius:var(--radius-sm);max-height:200px;object-fit:cover;display:none;"/>
       </div>
-      <button class="btn-primary" onclick="doAddSign()">💾 저장 / Save Sign</button>
+  <div class="field-label">기준 랜드마크 캡처 / Capture Reference Landmark</div>
+
+  <!-- Camera capture section -->
+  <div id="admin-capture-section" style="margin-bottom:14px;">
+    <!-- Capture button to open camera -->
+    <button type="button" onclick="openAdminCapture()"
+      style="width:100%;background:var(--teal-dim);border:1px solid var(--teal-border);
+      border-radius:var(--radius-sm);padding:12px;color:var(--teal);
+      font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;
+      margin-bottom:10px;">
+    📷 카메라로 랜드마크 캡처 / Capture Landmark via Camera
+  </button>
+
+  <!-- Camera feed (hidden until opened) -->
+  <div id="admin-camera-container" style="display:none;margin-bottom:10px;">
+    <div style="display:flex;justify-content:center;">
+      <div style="position:relative;width:500px;height:500px;">
+        <video id="admin-webcam" autoplay playsinline
+          style="width:500px;height:500px;object-fit:cover;
+          border-radius:var(--radius-lg);
+          border:1px solid var(--border-mid);
+          position:absolute;top:0;left:0;">
+        </video>
+        <canvas id="admin-landmark-canvas"
+          style="position:absolute;top:0;left:0;
+          width:500px;height:500px;
+          border-radius:var(--radius-lg);
+          pointer-events:none;">
+        </canvas>
+      </div>
+    </div>
+    <div id="admin-hand-status"
+      style="text-align:center;font-size:12px;color:var(--text-dim);
+      margin-top:8px;font-family:var(--mono);">
+      손을 카메라에 보여주세요 / Show your hand
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto;">
+      <button type="button" onclick="captureAdminLandmark()"
+        style="flex:2;background:var(--teal);border:none;border-radius:var(--radius-sm);
+        padding:11px;color:var(--navy);font-family:var(--sans);
+        font-size:13px;font-weight:700;cursor:pointer;">
+        📸 캡처 / Capture
+      </button>
+      <button type="button" onclick="closeAdminCamera()"
+        style="flex:1;background:transparent;border:1px solid var(--border-mid);
+        border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
+        font-family:var(--sans);font-size:12px;cursor:pointer;">
+        취소 / Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+  <!-- Captured status -->
+  <div id="admin-capture-status"
+    style="background:var(--navy);border:1px solid var(--border-faint);
+    border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
+    color:var(--text-dim);text-align:center;">
+    ❌ 랜드마크 미캡처 / Not captured yet
+  </div>
+</div>
+
+      <button class="btn-primary" onclick="doAddSign()" style="margin-top:14px;">
+        💾 저장 / Save Sign
+      </button>
     </div>
   </div>
 </div>
@@ -1240,12 +1315,34 @@ function showLearnFromDB(lesson) {
   currentSign = lesson;
   document.getElementById('learn-sign-name').textContent = lesson.sign_name;
   document.getElementById('learn-sign-sub').textContent = currentCategory + ' · 난이도: ' + lesson.difficulty;
-  document.getElementById('learn-emoji').textContent = emoji;
   document.getElementById('learn-desc').textContent = lesson.description || '설명 없음';
   document.getElementById('learn-back-btn').onclick = () => goTo('signs');
   document.getElementById('practice-back-btn').onclick = () => goTo('learn');
   document.getElementById('practice-title').textContent = '연습 / Practice: ' + lesson.sign_name;
   document.getElementById('practice-emoji').textContent = emoji;
+
+  // Handle media display
+  const video = document.getElementById('demo-video');
+  const image = document.getElementById('demo-image');
+  const emojiContainer = document.getElementById('demo-emoji-container');
+  const learnEmoji = document.getElementById('learn-emoji');
+
+  // Reset all
+  video.style.display = 'none';
+  image.style.display = 'none';
+  emojiContainer.style.display = 'flex';
+  learnEmoji.textContent = emoji;
+
+  if (lesson.video_url) {
+    video.src = lesson.video_url;
+    video.style.display = 'block';
+    emojiContainer.style.display = 'none';
+  } else if (lesson.image_url) {
+    image.src = lesson.image_url;
+    image.style.display = 'block';
+    emojiContainer.style.display = 'none';
+  }
+
   resetPractice();
   goTo('learn');
 }
@@ -1465,6 +1562,123 @@ async function doCapture() {
     showToast('서버 오류 / Server error', 'error');
     console.error(err);
   }
+}
+
+let adminCameraStream = null;
+let adminMpHands = null;
+let adminAnimationId = null;
+let capturedLandmarkData = null;
+
+async function openAdminCapture() {
+  const container = document.getElementById('admin-camera-container');
+  const video = document.getElementById('admin-webcam');
+  const canvas = document.getElementById('admin-landmark-canvas');
+  const ctx = canvas.getContext('2d');
+
+  container.style.display = 'block';
+
+  try {
+    adminCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 }
+    });
+    video.srcObject = adminCameraStream;
+
+    // Setup MediaPipe
+    adminMpHands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    adminMpHands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.5
+    });
+
+    adminMpHands.onResults((results) => {
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (const landmarks of results.multiHandLandmarks) {
+          drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {
+            color: '#40E0D0', lineWidth: 2
+          });
+          drawLandmarks(ctx, landmarks, {
+            color: '#FFD700', lineWidth: 1, radius: 4
+          });
+        }
+        document.getElementById('admin-hand-status').textContent = '✅ 손 감지됨! SPACE 또는 캡처 버튼 / Hand detected!';
+        document.getElementById('admin-hand-status').style.color = 'var(--green-ok)';
+      } else {
+        document.getElementById('admin-hand-status').textContent = '❌ 손이 감지되지 않습니다 / No hand detected';
+        document.getElementById('admin-hand-status').style.color = 'var(--red-err)';
+      }
+    });
+
+    async function processAdminFrame() {
+      if (!adminCameraStream) return;
+      await adminMpHands.send({ image: video });
+      adminAnimationId = setTimeout(processAdminFrame, 50);
+    }
+
+    video.onloadedmetadata = () => { processAdminFrame(); };
+
+  } catch (err) {
+    showToast('카메라 오류 / Camera error', 'error');
+    container.style.display = 'none';
+  }
+}
+
+async function captureAdminLandmark() {
+  const video = document.getElementById('admin-webcam');
+
+  // Use Flask backend to extract landmarks
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+  try {
+    const res = await fetch(`${API}/extract-landmarks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+    const data = await res.json();
+
+    if (!data.detected) {
+      showToast('손이 감지되지 않았습니다 / No hand detected', 'error');
+      return;
+    }
+
+    // Store captured landmarks
+    capturedLandmarkData = data.landmarks;
+
+    // Update status
+    document.getElementById('admin-capture-status').innerHTML =
+      `✅ 랜드마크 캡처 완료! / Landmark captured! (${data.landmarks.length} points)`;
+    document.getElementById('admin-capture-status').style.color = 'var(--green-ok)';
+    document.getElementById('admin-capture-status').style.borderColor = 'rgba(46,204,113,0.3)';
+
+    showToast('랜드마크 캡처 완료! / Landmark captured!', 'success');
+    closeAdminCamera();
+
+  } catch (err) {
+    showToast('캡처 실패 / Capture failed', 'error');
+  }
+}
+
+function closeAdminCamera() {
+  if (adminAnimationId) { clearTimeout(adminAnimationId); adminAnimationId = null; }
+  if (adminMpHands) { adminMpHands.close(); adminMpHands = null; }
+  if (adminCameraStream) {
+    adminCameraStream.getTracks().forEach(t => t.stop());
+    adminCameraStream = null;
+  }
+  document.getElementById('admin-camera-container').style.display = 'none';
 }
 
 // ── ADMIN SUB-PAGE LOGIC ──
@@ -1725,9 +1939,18 @@ async function doAddSign() {
   const diff = document.getElementById('add-diff').value;
   const desc = document.getElementById('add-desc').value.trim();
   const hint = document.getElementById('add-hint').value.trim();
-  if (!name || !desc) { showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+
+  if (!name || !desc) {
+    showToast('수어명과 설명을 입력하세요 / Enter name and description', 'error'); return;
+  }
+  if (!capturedLandmarkData) {
+    showToast('랜드마크를 먼저 캡처하세요 / Please capture landmark first', 'error'); return;
+  }
+
   try {
     const catMap = {'지문자':1,'숫자':2,'인사':3,'일상':4};
+
+    // Step 1 — Add lesson
     const res = await fetch(`${API}/lessons`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -1740,17 +1963,43 @@ async function doAddSign() {
       })
     });
     const data = await res.json();
-    if (res.ok) {
-      showToast('새 수어 추가 완료! / Sign added!', 'success');
-      document.getElementById('add-name').value = '';
-      document.getElementById('add-desc').value = '';
-      document.getElementById('add-hint').value = '';
-      setTimeout(() => goTo('admin'), 800);
-    } else {
-      showToast(data.error || '추가 실패 / Failed to add', 'error');
-    }
+    if (!res.ok) { showToast(data.error || '추가 실패 / Failed', 'error'); return; }
+
+    const lessonId = data.lesson_id;
+
+    // Step 2 — Save landmark JSON to GESTURE_DATA
+    const landmarkJson = JSON.stringify({
+      sign_name: name,
+      category: cat,
+      hand: 'right',
+      landmarks: capturedLandmarkData
+    });
+
+    await fetch(`${API}/gesture`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        lesson_id: lessonId,
+        landmark_json: landmarkJson
+      })
+    });
+
+    showToast('새 수어 추가 완료! / Sign added with landmark!', 'success');
+
+    // Reset form
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-desc').value = '';
+    document.getElementById('add-hint').value = '';
+    capturedLandmarkData = null;
+    document.getElementById('admin-capture-status').innerHTML =
+      '❌ 랜드마크 미캡처 / Not captured yet';
+    document.getElementById('admin-capture-status').style.color = 'var(--text-dim)';
+
+    setTimeout(() => goTo('admin'), 800);
+
   } catch (err) {
     showToast('서버 오류 / Server error', 'error');
+    console.error(err);
   }
 }
 

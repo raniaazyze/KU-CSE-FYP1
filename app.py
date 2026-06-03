@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_mysqldb import MySQL
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 import bcrypt
 import config
 import json
@@ -12,6 +13,13 @@ import base64
 import json
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30MB max
+ALLOWED_VIDEO = {'mp4', 'mov', 'avi', 'webm'}
+ALLOWED_IMAGE = {'jpg', 'jpeg', 'png', 'gif'}
+
+def allowed_file(filename, allowed):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed
 app.config['JSON_AS_ASCII'] = False
 app.json.ensure_ascii = False
 CORS(app)
@@ -141,17 +149,39 @@ def get_lessons(category_id):
     cur.execute("SELECT * FROM LESSONS WHERE category_id = %s", (category_id,))
     rows = cur.fetchall()
     cur.close()
-    return jsonify([{'lesson_id': r[0], 'sign_name': r[2], 'difficulty': r[3], 'description': r[6], 'hint': r[7]} for r in rows])
+    return app.response_class(
+        response=json.dumps([{
+            'lesson_id': r[0],
+            'sign_name': r[2],
+            'difficulty': r[3],
+            'video_url': r[4] or '',
+            'image_url': r[5] or '',
+            'description': r[6],
+            'hint': r[7]
+        } for r in rows], ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
 
 @app.route('/api/lessons', methods=['POST'])
 def add_lesson():
     data = request.get_json()
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO LESSONS (category_id, sign_name, difficulty, description, hint) VALUES (%s,%s,%s,%s,%s)",
-                (data['category_id'], data['sign_name'], data['difficulty'], data['description'], data['hint']))
+    cur.execute("""INSERT INTO LESSONS (category_id, sign_name, difficulty, description, hint)
+                   VALUES (%s, %s, %s, %s, %s)""",
+                (data['category_id'], data['sign_name'], data['difficulty'],
+                 data['description'], data['hint']))
     mysql.connection.commit()
+    lesson_id = cur.lastrowid
     cur.close()
-    return jsonify({'message': '레슨 추가 완료 / Lesson added'}), 201
+    return app.response_class(
+        response=json.dumps({
+            'message': '레슨 추가 완료 / Lesson added',
+            'lesson_id': lesson_id
+        }, ensure_ascii=False),
+        status=201,
+        mimetype='application/json'
+    )
 
 @app.route('/api/lessons/<int:lesson_id>', methods=['PUT'])
 def edit_lesson(lesson_id):
@@ -494,6 +524,105 @@ def analyze_gesture():
 
     except Exception as e:
         print(f"Analysis error: {e}")
+        return jsonify({'error': str(e)}), 500
+    
+# ── UPLOAD DEMO MEDIA ──
+@app.route('/api/upload/media', methods=['POST'])
+def upload_media():
+    if 'file' not in request.files:
+        return jsonify({'error': '파일이 없습니다 / No file'}), 400
+    
+    file = request.files['file']
+    lesson_id = request.form.get('lesson_id')
+    
+    if file.filename == '':
+        return jsonify({'error': '파일을 선택해주세요 / No file selected'}), 400
+    
+    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+    
+    if ext in ALLOWED_VIDEO:
+        folder = 'static/uploads/videos'
+        media_type = 'video'
+    elif ext in ALLOWED_IMAGE:
+        folder = 'static/uploads/images'
+        media_type = 'image'
+    else:
+        return jsonify({'error': '지원하지 않는 파일 형식 / Unsupported file type'}), 400
+    
+    os.makedirs(folder, exist_ok=True)
+    filename = secure_filename(f"lesson_{lesson_id}_{file.filename}")
+    filepath = os.path.join(folder, filename)
+    file.save(filepath)
+    
+    # Update lesson in DB with media path
+    url = f"/{folder}/{filename}"
+    cur = mysql.connection.cursor()
+    if media_type == 'video':
+        cur.execute("UPDATE LESSONS SET video_url = %s WHERE lesson_id = %s", (url, lesson_id))
+    else:
+        cur.execute("UPDATE LESSONS SET image_url = %s WHERE lesson_id = %s", (url, lesson_id))
+    mysql.connection.commit()
+    cur.close()
+    
+    return app.response_class(
+        response=json.dumps({
+            'message': '업로드 완료 / Upload successful',
+            'url': url,
+            'type': media_type
+        }, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
+# ── SERVE STATIC FILES ──
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_file(f'static/{filename}')
+
+# ── EXTRACT LANDMARKS FROM IMAGE ──
+@app.route('/api/extract-landmarks', methods=['POST'])
+def extract_landmarks():
+    try:
+        data = request.get_json()
+        image_data = data['image'].split(',')[1]
+        image_bytes = base64.b64decode(image_data)
+        np_arr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+        if frame is None:
+            return jsonify({'detected': False, 'error': 'Invalid image'}), 400
+
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        result = hands_detector.process(rgb)
+
+        if not result.multi_hand_landmarks:
+            return app.response_class(
+                response=json.dumps({
+                    'detected': False,
+                    'message': '손이 감지되지 않았습니다 / No hand detected'
+                }, ensure_ascii=False),
+                status=200,
+                mimetype='application/json'
+            )
+
+        landmarks = []
+        for idx, lm in enumerate(result.multi_hand_landmarks[0].landmark):
+            landmarks.append({
+                'id': idx,
+                'x': round(lm.x, 4),
+                'y': round(lm.y, 4),
+                'z': round(lm.z, 4)
+            })
+
+        return app.response_class(
+            response=json.dumps({
+                'detected': True,
+                'landmarks': landmarks
+            }, ensure_ascii=False),
+            status=200,
+            mimetype='application/json'
+        )
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
     
 if __name__ == '__main__':
