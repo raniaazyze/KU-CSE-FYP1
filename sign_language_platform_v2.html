@@ -43,9 +43,8 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 
 /* ── SCREEN SYSTEM ── */
 .screen { display: none; flex-direction: column; min-height: 100vh; }
-.screen.active { display: flex; }
-
-.screen {
+.screen.active { 
+  display: flex; 
   animation: fadeIn 0.2s ease;
 }
 @keyframes fadeIn {
@@ -441,6 +440,114 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
   background: var(--teal-dim); border-color: var(--teal);
   color: var(--teal); font-weight: 700;
 }
+
+/* ── SKELETON LOADING ── */
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--navy-mid) 25%, 
+    var(--navy-light) 50%, 
+    var(--navy-mid) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-text {
+  height: 14px; margin-bottom: 8px; border-radius: 4px;
+}
+.skeleton-card {
+  height: 80px; margin-bottom: 10px; border-radius: var(--radius-md);
+}
+.skeleton-stat {
+  height: 90px; border-radius: var(--radius-md);
+}
+
+/* ── LIGHT MODE ── */
+body.light-mode {
+  --navy: #F0F4F8;
+  --navy-mid: #E2E8F0;
+  --navy-light: #CBD5E0;
+  --teal: #0097A7;
+  --teal-dim: rgba(0,151,167,0.15);
+  --teal-border: rgba(0,151,167,0.25);
+  --yellow: #F59E0B;
+  --yellow-dim: rgba(245,158,11,0.12);
+  --yellow-border: rgba(245,158,11,0.4);
+  --green-ok: #059669;
+  --green-ok-dim: rgba(5,150,105,0.15);
+  --red-err: #DC2626;
+  --red-err-dim: rgba(220,38,38,0.15);
+  --text-bright: #1A202C;
+  --text-mid: #4A5568;
+  --text-dim: #718096;
+  --border-faint: rgba(0,151,167,0.12);
+  --border-mid: rgba(0,151,167,0.25);
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 600px) {
+  /* Smaller topnav */
+  .topnav { padding: 10px 14px; }
+  .logo { font-size: 11px; }
+  .nav-btn { font-size: 11px; padding: 5px 7px; }
+  .nav-btn .nav-icon { font-size: 12px; }
+
+  /* Stack stat cards */
+  .stat-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat-val { font-size: 18px; }
+  .stat-lbl { font-size: 9px; }
+
+  /* Full width webcam on mobile */
+  #screen-practice .content > div[style*="500px"] {
+    width: 100% !important;
+  }
+  #webcam-video, #landmark-canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Stack category grid */
+  .cat-grid { grid-template-columns: 1fr; }
+
+  /* Full width admin camera */
+  #admin-camera-container > div > div,
+  #edit-camera-container > div > div {
+    width: 100% !important;
+    height: auto !important;
+  }
+  #admin-webcam, #admin-landmark-canvas,
+  #edit-webcam, #edit-landmark-canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Smaller buttons */
+  .btn-capture { font-size: 12px; padding: 11px; }
+  .btn-sec { font-size: 11px; padding: 11px; }
+  .btn-primary { font-size: 13px; padding: 12px; }
+
+  /* Content padding */
+  .content { padding: 14px 14px 30px; }
+
+  /* VFB banner */
+  .vfb-banner { padding: 12px 14px; gap: 10px; }
+  .vfb-score { font-size: 24px; }
+  .vfb-headline { font-size: 15px; }
+
+  /* Login */
+  .login-hero h1 { font-size: 18px; }
+  .login-card { padding: 20px 16px; }
+
+  /* Admin grid */
+  .admin-grid { grid-template-columns: 1fr; }
+
+  .greeting { font-size: 16px; }
+  .greeting-sub { font-size: 11px; }
+}
+
 </style>
 </head>
 <body>
@@ -512,7 +619,15 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
       <button class="nav-btn" onclick="goTo('progress')"><span class="nav-icon">📊</span>진행도</button>
     </div>
-    <div class="avatar-btn" id="dash-avatar" onclick="goTo('dashboard')">유</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-toggle" onclick="toggleTheme()"
+        style="background:transparent;border:1px solid var(--border-faint);
+        border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-dim);
+        font-size:14px;cursor:pointer;transition:all 0.15s;">
+        🌙
+      </button>
+      <div class="avatar-btn" id="dash-avatar" onclick="goTo('dashboard')">유</div>
+    </div>
   </div>
   <div class="content">
     <div class="greeting-block">
@@ -554,7 +669,15 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
     <div class="nav-links">
       <button class="nav-btn active">🛡 관리자</button>
     </div>
-    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-toggle" onclick="toggleTheme()"
+        style="background:transparent;border:1px solid var(--border-faint);
+        border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-dim);
+        font-size:14px;cursor:pointer;transition:all 0.15s;">
+        🌙
+      </button>
+      <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+    </div>
   </div>
   <div class="content">
     <div class="greeting-block">
@@ -1270,6 +1393,14 @@ async function doSignUp() {
 
 async function showCategory(catId, catName) {
   currentCategory = catName;
+
+  // Show skeleton immediately
+  document.getElementById('sign-list-container').innerHTML = `
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>`;
+  goTo('signs');
+
   try {
     const res = await fetch(`${API}/lessons/${catId}`);
     const lessons = await res.json();
@@ -2104,6 +2235,12 @@ async function loadAdminProgress() {
 }
 
 async function loadUserStats() {
+  // Show skeleton first
+  document.getElementById('stat-completed').innerHTML = '<div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div>';
+  document.getElementById('stat-avg').innerHTML = '<div class="skeleton skeleton-text" style="width:50px;margin:auto;"></div>';
+  document.getElementById('stat-streak').innerHTML = '<div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div>';
+
+  // Show date
   const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
   const now = new Date();
   const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}`;
@@ -2111,12 +2248,17 @@ async function loadUserStats() {
     `${dateStr} · 오늘도 수어를 연습해볼까요? / Ready to practice!`;
 
   if (!currentUser) return;
+
+  // Small delay so skeleton is visible
+  await new Promise(resolve => setTimeout(resolve, 600));
+  console.log('currentUser:', currentUser); // ← add this
+
   try {
     const res = await fetch(`${API}/stats/${currentUser.user_id}`);
     const data = await res.json();
     document.getElementById('stat-completed').textContent = data.completed;
     document.getElementById('stat-avg').textContent = data.avg_score + '%';
-    document.getElementById('stat-remaining').textContent = data.remaining;
+    document.getElementById('stat-streak').textContent = currentUser.streak || 0;
   } catch (err) {
     console.log('Stats load error:', err);
   }
@@ -2161,6 +2303,15 @@ async function loadUserProgress() {
 }
 
 async function loadCategories() {
+  const grid = document.querySelector('#screen-lessons .cat-grid');
+
+  // Show skeleton
+    grid.innerHTML = `
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>`;
+
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
@@ -2194,6 +2345,15 @@ async function loadCategories() {
 }
 
 async function loadDashboardCategories() {
+  const container = document.getElementById('dashboard-category-list');
+
+  // Show skeleton first
+  container.innerHTML = `
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>`;
+
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
@@ -2533,6 +2693,32 @@ function fireConfetti() {
     colors: ['#40E0D0', '#FFD700', '#2ECC71', '#fff']
   });
 }
+
+function toggleTheme() {
+  const body = document.body;
+  const isLight = body.classList.contains('light-mode');
+  
+  if (isLight) {
+    body.classList.remove('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '🌙');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    body.classList.add('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+    localStorage.setItem('theme', 'light');
+  }
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+  }
+}
+
+
+loadTheme();
 
 </script>
 </body>
