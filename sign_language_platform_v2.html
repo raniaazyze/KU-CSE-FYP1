@@ -8,8 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  
-  <style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -522,9 +523,9 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
         <div class="stat-lbl">평균 점수<br>Avg Score</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-val" id="stat-remaining">—</div>
-        <div class="stat-lbl">남은 수어<br>Remaining</div>
+        <div class="stat-icon">🔥</div>
+        <div class="stat-val" id="stat-streak">—</div>
+        <div class="stat-lbl">연속 학습일<br>Day Streak</div>
       </div>
     </div>
     <div class="section-title">카테고리별 진행도 / Progress by Category</div>
@@ -1173,7 +1174,8 @@ async function doLogin() {
     const data = await res.json();
     if (res.ok) {
       currentUser = data;
-      showToast('로그인 성공! / Login successful!', 'success');
+      document.getElementById('dash-greeting').textContent = data.username + '님, 안녕하세요! 👋';
+      document.getElementById('stat-streak').textContent = data.streak || 0;
       if (data.role === 'admin') {
         document.querySelector('#screen-admin .avatar-btn').textContent = data.username[0].toUpperCase();
         setTimeout(() => goTo('admin'), 600);
@@ -1257,7 +1259,16 @@ async function showCategory(catId, catName) {
       return;
     }
 
-    // Emoji map for signs
+    // Get user progress
+    let completedIds = [];
+    if (currentUser) {
+      try {
+        const progRes = await fetch(`${API}/progress/${currentUser.user_id}`);
+        const progress = await progRes.json();
+        completedIds = progress.map(p => p.lesson_id);
+      } catch(e) {}
+    }
+
     const emojiMap = {
       'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
       'F':'🤘', 'G':'👉', 'H':'🤞', 'I':'🤙', 'J':'🤙',
@@ -1272,17 +1283,21 @@ async function showCategory(catId, catName) {
 
     document.getElementById('signs-title').textContent = catName + ' — 수어 목록 / Signs';
     const c = document.getElementById('sign-list-container');
-    c.innerHTML = lessons.map((s) => `
-      <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-        <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
-        <div class="sign-info">
-          <div class="sign-name">${s.sign_name}</div>
-          <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
-        </div>
-        <div class="sign-status-badge todo">
-          <div class="status-dot todo"></div>미시작 / Todo
-        </div>
-      </div>`).join('');
+    c.innerHTML = lessons.map((s) => {
+      const isDone = completedIds.includes(s.lesson_id);
+      return `
+        <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
+          <div class="sign-info">
+            <div class="sign-name">${s.sign_name}</div>
+            <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
+          </div>
+          <div class="sign-status-badge ${isDone ? 'done' : 'todo'}">
+            <div class="status-dot ${isDone ? 'done' : 'todo'}"></div>
+            ${isDone ? '완료 ✓' : '미시작 / Todo'}
+          </div>
+        </div>`;
+    }).join('');
     goTo('signs');
   } catch (err) {
     showToast('레슨 로드 실패 / Failed to load lessons', 'error');
@@ -1365,13 +1380,32 @@ function setFeedback(type, icon, headline, sub, score) {
   const headlineEl = document.getElementById('vfb-headline');
   const subEl = document.getElementById('vfb-sub');
   const scoreEl = document.getElementById('vfb-score');
+  
   banner.className = 'vfb-banner ' + type;
   iconEl.textContent = icon;
   headlineEl.className = 'vfb-headline ' + type;
   headlineEl.textContent = headline;
   subEl.textContent = sub;
   scoreEl.className = 'vfb-score ' + type;
-  scoreEl.textContent = score;
+
+  // Animate score counting up
+  if (score !== '—' && score.includes('%')) {
+    const targetScore = parseInt(score);
+    let current = 0;
+    const duration = 800;
+    const increment = targetScore / (duration / 16);
+    scoreEl.textContent = '0%';
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= targetScore) {
+        current = targetScore;
+        clearInterval(timer);
+      }
+      scoreEl.textContent = Math.round(current) + '%';
+    }, 16);
+  } else {
+    scoreEl.textContent = score;
+  }
 }
 
 let webcamStream = null;
@@ -1485,12 +1519,14 @@ async function doCapture() {
     showToast('카메라가 활성화되지 않았습니다 / Camera not active', 'error');
     return;
   }
+
   if (!currentSign || !currentSign.lesson_id) {
     showToast('레슨을 선택해주세요 / Please select a lesson', 'error');
     return;
   }
 
-  document.getElementById('hand-status').textContent = '분석 중... / Analyzing...';
+  document.getElementById('hand-status').textContent =
+    '분석 중... / Analyzing...';
   showToast('분석 중... / Analyzing...', 'info');
 
   const imageData = captureFrame();
@@ -1500,38 +1536,86 @@ async function doCapture() {
   try {
     const res = await fetch(`${API}/analyze`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         lesson_id: currentSign.lesson_id,
         image: imageData
       })
     });
+
+    if (!res.ok) {
+      throw new Error(`Server returned ${res.status}`);
+    }
+
     const data = await res.json();
 
+    // No hand detected
     if (!data.detected) {
-      document.getElementById('hand-status').textContent = '❌ 손 미감지 / No hand';
-      setFeedback('fail', '🤲', '손이 감지되지 않았습니다', '손을 카메라에 잘 보이게 해주세요 / Show your hand clearly', '—');
-      showToast('손을 카메라에 보여주세요 / Show your hand', 'error');
+      document.getElementById('hand-status').textContent =
+        '❌ 손 미감지 / No hand';
+
+      setFeedback(
+        'fail',
+        '🤲',
+        '손이 감지되지 않았습니다',
+        '손을 카메라에 잘 보이게 해주세요 / Show your hand clearly',
+        '—'
+      );
+
+      showToast(
+        '손을 카메라에 보여주세요 / Show your hand',
+        'error'
+      );
+
       return;
     }
 
     const score = data.score;
-    document.getElementById('hand-status').textContent = '✅ 손 감지됨 / Hand detected';
 
+    document.getElementById('hand-status').textContent =
+      '✅ 손 감지됨 / Hand detected';
+
+    // Correct sign
     if (score >= 70) {
-      if (dot) dot.className = 'attempt-dot pass';
+      if (dot) {
+        dot.className = 'attempt-dot pass';
+      }
+
       setFeedback(
-        'success', '✅',
+        'success',
+        '✅',
         '✓ 정답! / Correct!',
         '훌륭해요! 다음 수어로 넘어가보세요 / Great job!',
         score + '%'
       );
-      showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
-      // Save to DB
+
+      showToast(
+        `정답! ${score}% / Correct! ${score}%`,
+        'success'
+      );
+
+      // 🎉 Fire confetti on perfect score
+      if (score >= 95) {
+        fireConfetti();
+        setTimeout(fireConfetti, 600);  // double burst!
+      } else {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ['#40E0D0', '#FFD700', '#2ECC71']
+        });
+      }
+
+      // Save progress
       if (currentUser && currentSign) {
-        fetch(`${API}/progress`, {
+        await fetch(`${API}/progress`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             user_id: currentUser.user_id,
             lesson_id: currentSign.lesson_id,
@@ -1540,28 +1624,97 @@ async function doCapture() {
           })
         });
       }
+
+      showNextSignButton();
       failCount = 0;
-    } else {
-      if (dot) dot.className = 'attempt-dot fail';
+    }
+
+    // Wrong sign
+    else {
+      if (dot) {
+        dot.className = 'attempt-dot fail';
+      }
+
       failCount++;
+
       setFeedback(
-        'fail', '❌',
-        '✗ 다시 시도 / Try Again',
-        '조금 더 연습해보세요 / Keep practicing!',
+        'fail',
+        '❌',
+        '다시 시도해보세요 / Try Again',
+        '수어 자세를 조금 더 맞춰보세요 / Adjust your hand position',
         score + '%'
       );
-      showToast('다시 시도해보세요 / Try again (' + score + '%)', 'error');
-      if (failCount >= 3 && currentSign) {
-        document.getElementById('hint-box').className = 'hint-box visible';
-        document.getElementById('hint-content').textContent =
-          currentSign.hint || '손 위치를 조정해보세요 / Adjust your hand position';
-      }
-    }
-    attemptCount++;
 
-  } catch (err) {
-    showToast('서버 오류 / Server error', 'error');
-    console.error(err);
+      showToast(
+        `틀렸습니다 (${score}%) / Incorrect (${score}%)`,
+        'error'
+      );
+    }
+
+  } catch (error) {
+    console.error('Capture error:', error);
+
+    document.getElementById('hand-status').textContent =
+      '❌ 서버 오류 / Server Error';
+
+    showToast(
+      '서버 오류가 발생했습니다 / Server error occurred',
+      'error'
+    );
+  }
+}
+
+function showNextSignButton() {
+  // Check if there's a next sign in current category
+  const container = document.getElementById('sign-list-container');
+  const signs = container ? container.querySelectorAll('.sign-item') : [];
+
+  // Find current sign index
+  let currentIdx = -1;
+  signs.forEach((item, idx) => {
+    if (item.querySelector('.sign-name').textContent === currentSign.sign_name) {
+      currentIdx = idx;
+    }
+  });
+
+  const nextSign = signs[currentIdx + 1];
+
+  // Update the sub text with next button
+  const subEl = document.getElementById('vfb-sub');
+  if (nextSign) {
+    const nextName = nextSign.querySelector('.sign-name').textContent;
+    subEl.innerHTML = `훌륭해요! / Great job! &nbsp;
+      <button onclick="nextSign()" 
+        style="background:var(--green-ok);border:none;border-radius:var(--radius-sm);
+        padding:4px 12px;color:#fff;font-family:var(--sans);font-size:12px;
+        font-weight:700;cursor:pointer;">
+        다음: ${nextName} →
+      </button>`;
+  } else {
+    subEl.innerHTML = `🎉 카테고리 완료! / Category complete! &nbsp;
+      <button onclick="goTo('lessons')"
+        style="background:var(--yellow);border:none;border-radius:var(--radius-sm);
+        padding:4px 12px;color:var(--navy);font-family:var(--sans);font-size:12px;
+        font-weight:700;cursor:pointer;">
+        다른 카테고리 / Other Categories →
+      </button>`;
+  }
+}
+
+function nextSign() {
+  const container = document.getElementById('sign-list-container');
+  const signs = container ? container.querySelectorAll('.sign-item') : [];
+
+  let currentIdx = -1;
+  signs.forEach((item, idx) => {
+    if (item.querySelector('.sign-name').textContent === currentSign.sign_name) {
+      currentIdx = idx;
+    }
+  });
+
+  const nextSignItem = signs[currentIdx + 1];
+  if (nextSignItem) {
+    nextSignItem.click();
   }
 }
 
@@ -1698,6 +1851,10 @@ function getAllSigns() {
 function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
+
+  // ← Add browser history support
+  history.pushState({ screen }, '', '#' + screen);
+
   if (screen === 'lessons') loadCategories();
   if (screen === 'dashboard') { loadUserStats(); loadDashboardCategories(); }
   if (screen === 'progress') loadUserProgress();
@@ -1706,10 +1863,30 @@ function goTo(screen) {
   if (screen === 'admin-lessons-list') buildAllLessonsList();
   if (screen === 'admin-users') loadAdminUsers();
   if (screen === 'admin-all-progress') loadAdminProgress();
-  if (screen === 'admin') loadAdminStats();        // ← only loads stat cards
+  if (screen === 'admin') loadAdminStats();
   if (screen === 'practice') startWebcam();
   if (screen !== 'practice') stopWebcam();
 }
+
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.screen) {
+    const screen = event.state.screen;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screen).classList.add('active');
+    // Reload data for the screen
+    if (screen === 'lessons') loadCategories();
+    if (screen === 'dashboard') { loadUserStats(); loadDashboardCategories(); }
+    if (screen === 'progress') loadUserProgress();
+    if (screen === 'admin-edit-sign') buildEditPicker();
+    if (screen === 'admin-delete-sign') buildDeleteList();
+    if (screen === 'admin-lessons-list') buildAllLessonsList();
+    if (screen === 'admin-users') loadAdminUsers();
+    if (screen === 'admin-all-progress') loadAdminProgress();
+    if (screen === 'admin') loadAdminStats();
+    if (screen === 'practice') startWebcam();
+    if (screen !== 'practice') stopWebcam();
+  }
+});
 
 async function loadAdminUsers() {
   const container = document.getElementById('admin-users-container');
@@ -2169,6 +2346,25 @@ function showToast(msg, type) {
   t.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ') + msg;
   t.className = 'vfb-toast ' + type + ' show';
   setTimeout(() => { t.className = 'vfb-toast'; }, 2800);
+}
+
+function fireConfetti() {
+  // Left side
+  confetti({
+    particleCount: 80,
+    angle: 60,
+    spread: 55,
+    origin: { x: 0 },
+    colors: ['#40E0D0', '#FFD700', '#2ECC71', '#fff']
+  });
+  // Right side
+  confetti({
+    particleCount: 80,
+    angle: 120,
+    spread: 55,
+    origin: { x: 1 },
+    colors: ['#40E0D0', '#FFD700', '#2ECC71', '#fff']
+  });
 }
 
 </script>

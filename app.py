@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from datetime import date, timedelta
 import bcrypt
 import config
 import json
@@ -80,12 +81,35 @@ def login():
         password_match = False
 
     if password_match:
+    # Update streak
+        cur2 = mysql.connection.cursor()
+        cur2.execute("SELECT streak, last_active FROM USERS WHERE user_id = %s", (user[0],))
+        streak_row = cur2.fetchone()
+        streak = streak_row[0] or 0
+        last_active = streak_row[1]
+        today = date.today()
+
+        if last_active is None:
+            streak = 1
+        elif last_active == today:
+            pass
+        elif last_active == today - timedelta(days=1):
+            streak += 1
+        else:
+            streak = 1
+
+        cur2.execute("UPDATE USERS SET streak = %s, last_active = %s WHERE user_id = %s",
+                    (streak, today, user[0]))
+        mysql.connection.commit()
+        cur2.close()
+
         return app.response_class(
             response=json.dumps({
                 'message': '로그인 성공 / Login successful',
                 'user_id': user[0],
                 'username': user[1],
-                'role': user[4]
+                'role': user[4],
+                'streak': streak
             }, ensure_ascii=False),
             status=200,
             mimetype='application/json'
@@ -625,5 +649,53 @@ def extract_landmarks():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+# ── UPDATE STREAK ──
+@app.route('/api/streak/<int:user_id>', methods=['POST'])
+def update_streak(user_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT streak, last_active FROM USERS WHERE user_id = %s", (user_id,))
+    row = cur.fetchone()
+    if not row:
+        cur.close()
+        return jsonify({'error': 'User not found'}), 404
+
+    from datetime import date, timedelta
+    today = date.today()
+    streak = row[0] or 0
+    last_active = row[1]
+
+    if last_active is None:
+        streak = 1
+    elif last_active == today:
+        pass  # already logged today
+    elif last_active == today - timedelta(days=1):
+        streak += 1  # consecutive day
+    else:
+        streak = 1  # streak broken
+
+    cur.execute("UPDATE USERS SET streak = %s, last_active = %s WHERE user_id = %s",
+                (streak, today, user_id))
+    mysql.connection.commit()
+    cur.close()
+
+    return app.response_class(
+        response=json.dumps({'streak': streak}, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
+# ── GET STREAK ──
+@app.route('/api/streak/<int:user_id>', methods=['GET'])
+def get_streak(user_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT streak FROM USERS WHERE user_id = %s", (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    return app.response_class(
+        response=json.dumps({'streak': row[0] if row else 0}, ensure_ascii=False),
+        status=200,
+        mimetype='application/json'
+    )
+
 if __name__ == '__main__':
     app.run(debug=True)
