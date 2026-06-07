@@ -8,8 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  
-  <style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -42,7 +43,14 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 
 /* ── SCREEN SYSTEM ── */
 .screen { display: none; flex-direction: column; min-height: 100vh; }
-.screen.active { display: flex; }
+.screen.active { 
+  display: flex; 
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ── TOPNAV ── */
 .topnav {
@@ -432,6 +440,114 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
   background: var(--teal-dim); border-color: var(--teal);
   color: var(--teal); font-weight: 700;
 }
+
+/* ── SKELETON LOADING ── */
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--navy-mid) 25%, 
+    var(--navy-light) 50%, 
+    var(--navy-mid) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-text {
+  height: 14px; margin-bottom: 8px; border-radius: 4px;
+}
+.skeleton-card {
+  height: 80px; margin-bottom: 10px; border-radius: var(--radius-md);
+}
+.skeleton-stat {
+  height: 90px; border-radius: var(--radius-md);
+}
+
+/* ── LIGHT MODE ── */
+body.light-mode {
+  --navy: #F0F4F8;
+  --navy-mid: #E2E8F0;
+  --navy-light: #CBD5E0;
+  --teal: #0097A7;
+  --teal-dim: rgba(0,151,167,0.15);
+  --teal-border: rgba(0,151,167,0.25);
+  --yellow: #F59E0B;
+  --yellow-dim: rgba(245,158,11,0.12);
+  --yellow-border: rgba(245,158,11,0.4);
+  --green-ok: #059669;
+  --green-ok-dim: rgba(5,150,105,0.15);
+  --red-err: #DC2626;
+  --red-err-dim: rgba(220,38,38,0.15);
+  --text-bright: #1A202C;
+  --text-mid: #4A5568;
+  --text-dim: #718096;
+  --border-faint: rgba(0,151,167,0.12);
+  --border-mid: rgba(0,151,167,0.25);
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 600px) {
+  /* Smaller topnav */
+  .topnav { padding: 10px 14px; }
+  .logo { font-size: 11px; }
+  .nav-btn { font-size: 11px; padding: 5px 7px; }
+  .nav-btn .nav-icon { font-size: 12px; }
+
+  /* Stack stat cards */
+  .stat-row { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .stat-val { font-size: 18px; }
+  .stat-lbl { font-size: 9px; }
+
+  /* Full width webcam on mobile */
+  #screen-practice .content > div[style*="500px"] {
+    width: 100% !important;
+  }
+  #webcam-video, #landmark-canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Stack category grid */
+  .cat-grid { grid-template-columns: 1fr; }
+
+  /* Full width admin camera */
+  #admin-camera-container > div > div,
+  #edit-camera-container > div > div {
+    width: 100% !important;
+    height: auto !important;
+  }
+  #admin-webcam, #admin-landmark-canvas,
+  #edit-webcam, #edit-landmark-canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Smaller buttons */
+  .btn-capture { font-size: 12px; padding: 11px; }
+  .btn-sec { font-size: 11px; padding: 11px; }
+  .btn-primary { font-size: 13px; padding: 12px; }
+
+  /* Content padding */
+  .content { padding: 14px 14px 30px; }
+
+  /* VFB banner */
+  .vfb-banner { padding: 12px 14px; gap: 10px; }
+  .vfb-score { font-size: 24px; }
+  .vfb-headline { font-size: 15px; }
+
+  /* Login */
+  .login-hero h1 { font-size: 18px; }
+  .login-card { padding: 20px 16px; }
+
+  /* Admin grid */
+  .admin-grid { grid-template-columns: 1fr; }
+
+  .greeting { font-size: 16px; }
+  .greeting-sub { font-size: 11px; }
+}
+
 </style>
 </head>
 <body>
@@ -497,18 +613,26 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ DASHBOARD (USER) ══ -->
 <div id="screen-dashboard" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn active" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
       <button class="nav-btn" onclick="goTo('progress')"><span class="nav-icon">📊</span>진행도</button>
     </div>
-    <div class="avatar-btn" id="dash-avatar" onclick="goTo('dashboard')">유</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-toggle" onclick="toggleTheme()"
+        style="background:transparent;border:1px solid var(--border-faint);
+        border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-dim);
+        font-size:14px;cursor:pointer;transition:all 0.15s;">
+        🌙
+      </button>
+      <div class="avatar-btn" id="dash-avatar" onclick="goTo('dashboard')">유</div>
+    </div>
   </div>
   <div class="content">
     <div class="greeting-block">
       <div class="greeting" id="dash-greeting">안녕하세요! 👋</div>
-      <div class="greeting-sub">오늘도 수어를 연습해볼까요? / Ready to practice today?</div>
+      <div class="greeting-sub" id="dash-greeting-sub">오늘도 수어를 연습해볼까요? / Ready to practice today?</div>
     </div>
     <div class="stat-row">
       <div class="stat-card">
@@ -522,9 +646,9 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
         <div class="stat-lbl">평균 점수<br>Avg Score</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-val" id="stat-remaining">—</div>
-        <div class="stat-lbl">남은 수어<br>Remaining</div>
+        <div class="stat-icon">🔥</div>
+        <div class="stat-val" id="stat-streak">—</div>
+        <div class="stat-lbl">연속 학습일<br>Day Streak</div>
       </div>
     </div>
     <div class="section-title">카테고리별 진행도 / Progress by Category</div>
@@ -545,7 +669,15 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
     <div class="nav-links">
       <button class="nav-btn active">🛡 관리자</button>
     </div>
-    <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-toggle" onclick="toggleTheme()"
+        style="background:transparent;border:1px solid var(--border-faint);
+        border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-dim);
+        font-size:14px;cursor:pointer;transition:all 0.15s;">
+        🌙
+      </button>
+      <div class="avatar-btn" style="background:rgba(255,215,0,0.15);border-color:rgba(255,215,0,0.4);color:var(--yellow);">A</div>
+    </div>
   </div>
   <div class="content">
     <div class="greeting-block">
@@ -602,7 +734,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PROGRESS SCREEN ══ -->
 <div id="screen-progress" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -644,7 +776,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LESSONS ══ -->
 <div id="screen-lessons" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('dashboard')"><span class="nav-icon">🏠</span>홈</button>
       <button class="nav-btn active" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
@@ -690,7 +822,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ SIGN LIST ══ -->
 <div id="screen-signs" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -706,7 +838,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ LEARN ══ -->
 <div id="screen-learn" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('lessons')"><span class="nav-icon">📚</span>레슨</button>
     </div>
@@ -743,7 +875,7 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 <!-- ══ PRACTICE ══ -->
 <div id="screen-practice" class="screen">
   <div class="topnav">
-    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼 <span style="font-size:10px;color:var(--yellow);margin-left:4px;">USER</span></div>
+    <div class="logo" onclick="goTo('dashboard')" style="cursor:pointer;">수어 플랫폼</div>
     <div class="nav-links">
       <button class="nav-btn" onclick="goTo('learn')"><span class="nav-icon">📖</span>학습</button>
     </div>
@@ -899,55 +1031,6 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
     📷 카메라로 랜드마크 캡처 / Capture Landmark via Camera
   </button>
 
-  <!-- Camera feed (hidden until opened) -->
-  <div id="admin-camera-container" style="display:none;margin-bottom:10px;">
-    <div style="display:flex;justify-content:center;">
-      <div style="position:relative;width:500px;height:500px;">
-        <video id="admin-webcam" autoplay playsinline
-          style="width:500px;height:500px;object-fit:cover;
-          border-radius:var(--radius-lg);
-          border:1px solid var(--border-mid);
-          position:absolute;top:0;left:0;">
-        </video>
-        <canvas id="admin-landmark-canvas"
-          style="position:absolute;top:0;left:0;
-          width:500px;height:500px;
-          border-radius:var(--radius-lg);
-          pointer-events:none;">
-        </canvas>
-      </div>
-    </div>
-    <div id="admin-hand-status"
-      style="text-align:center;font-size:12px;color:var(--text-dim);
-      margin-top:8px;font-family:var(--mono);">
-      손을 카메라에 보여주세요 / Show your hand
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto;">
-      <button type="button" onclick="captureAdminLandmark()"
-        style="flex:2;background:var(--teal);border:none;border-radius:var(--radius-sm);
-        padding:11px;color:var(--navy);font-family:var(--sans);
-        font-size:13px;font-weight:700;cursor:pointer;">
-        📸 캡처 / Capture
-      </button>
-      <button type="button" onclick="closeAdminCamera()"
-        style="flex:1;background:transparent;border:1px solid var(--border-mid);
-        border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
-        font-family:var(--sans);font-size:12px;cursor:pointer;">
-        취소 / Cancel
-      </button>
-    </div>
-  </div>
-</div>
-
-  <!-- Captured status -->
-  <div id="admin-capture-status"
-    style="background:var(--navy);border:1px solid var(--border-faint);
-    border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
-    color:var(--text-dim);text-align:center;">
-    ❌ 랜드마크 미캡처 / Not captured yet
-  </div>
-</div>
-
       <button class="btn-primary" onclick="doAddSign()" style="margin-top:14px;">
         💾 저장 / Save Sign
       </button>
@@ -996,9 +1079,69 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
         <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 / File upload', 'info')">
           <div style="font-size:12px;color:var(--text-dim);">📁 새 파일 업로드 / Upload new file (optional)</div>
         </div>
+        <div class="field-label">랜드마크 재캡처 / Re-capture Landmark</div>
+
+        <!-- Re-capture section -->
+        <div id="edit-capture-section" style="margin-bottom:14px;">
+          <button type="button" onclick="openEditCapture()"
+            style="width:100%;background:var(--teal-dim);border:1px solid var(--teal-border);
+            border-radius:var(--radius-sm);padding:12px;color:var(--teal);
+            font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;
+            margin-bottom:10px;">
+            📷 랜드마크 재캡처 / Re-capture Landmark
+          </button>
+
+          <!-- Camera feed -->
+          <div id="edit-camera-container" style="display:none;margin-bottom:10px;">
+            <div style="display:flex;justify-content:center;">
+              <div style="position:relative;width:500px;height:500px;">
+                <video id="edit-webcam" autoplay playsinline
+                  style="width:500px;height:500px;object-fit:cover;
+                  border-radius:var(--radius-lg);
+                  border:1px solid var(--border-mid);
+                  position:absolute;top:0;left:0;">
+                </video>
+                <canvas id="edit-landmark-canvas"
+                  style="position:absolute;top:0;left:0;
+                  width:500px;height:500px;
+                  border-radius:var(--radius-lg);
+                  pointer-events:none;">
+                </canvas>
+              </div>
+            </div>
+            <div id="edit-hand-status"
+              style="text-align:center;font-size:12px;color:var(--text-dim);
+              margin-top:8px;font-family:var(--mono);">
+              손을 카메라에 보여주세요 / Show your hand
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;
+              max-width:500px;margin-left:auto;margin-right:auto;">
+              <button type="button" onclick="captureEditLandmark()"
+                style="flex:2;background:var(--teal);border:none;
+                border-radius:var(--radius-sm);padding:11px;color:var(--navy);
+                font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;">
+                📸 캡처 / Capture
+              </button>
+              <button type="button" onclick="closeEditCamera()"
+                style="flex:1;background:transparent;border:1px solid var(--border-mid);
+                border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
+                font-family:var(--sans);font-size:12px;cursor:pointer;">
+                취소 / Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Capture status -->
+          <div id="edit-capture-status"
+            style="background:var(--navy);border:1px solid var(--border-faint);
+            border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
+            color:var(--text-dim);text-align:center;">
+            ℹ️ 선택사항 — 캡처하지 않으면 기존 랜드마크 유지 / Optional — keeps existing if not captured
+          </div>
+        </div>
         <div class="btn-row">
           <button class="btn-capture" onclick="doSaveEdit()">💾 변경 저장 / Save Changes</button>
-          <button class="btn-sec" onclick="document.getElementById('edit-form').style.display='none'">취소</button>
+          <button class="btn-sec" onclick="closeEditCamera(); editCapturedLandmark=null; document.getElementById('edit-form').style.display='none'">취소</button>
         </div>
       </div>
     </div>
@@ -1173,12 +1316,14 @@ async function doLogin() {
     const data = await res.json();
     if (res.ok) {
       currentUser = data;
-      showToast('로그인 성공! / Login successful!', 'success');
+      document.getElementById('dash-greeting').textContent = data.username + '님, 안녕하세요! 👋';
+      document.getElementById('stat-streak').textContent = data.streak || 0;
       if (data.role === 'admin') {
         document.querySelector('#screen-admin .avatar-btn').textContent = data.username[0].toUpperCase();
         setTimeout(() => goTo('admin'), 600);
       } else {
         document.getElementById('dash-avatar').textContent = data.username[0].toUpperCase();
+        document.getElementById('dash-greeting').textContent = data.username + '님, 안녕하세요! 👋';
         setTimeout(() => goTo('dashboard'), 600);
       }
     } else {
@@ -1248,6 +1393,14 @@ async function doSignUp() {
 
 async function showCategory(catId, catName) {
   currentCategory = catName;
+
+  // Show skeleton immediately
+  document.getElementById('sign-list-container').innerHTML = `
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>`;
+  goTo('signs');
+
   try {
     const res = await fetch(`${API}/lessons/${catId}`);
     const lessons = await res.json();
@@ -1256,7 +1409,16 @@ async function showCategory(catId, catName) {
       return;
     }
 
-    // Emoji map for signs
+    // Get user progress
+    let completedIds = [];
+    if (currentUser) {
+      try {
+        const progRes = await fetch(`${API}/progress/${currentUser.user_id}`);
+        const progress = await progRes.json();
+        completedIds = progress.map(p => p.lesson_id);
+      } catch(e) {}
+    }
+
     const emojiMap = {
       'A':'✊', 'B':'🖐', 'C':'🤏', 'D':'👆', 'E':'🤙',
       'F':'🤘', 'G':'👉', 'H':'🤞', 'I':'🤙', 'J':'🤙',
@@ -1271,17 +1433,21 @@ async function showCategory(catId, catName) {
 
     document.getElementById('signs-title').textContent = catName + ' — 수어 목록 / Signs';
     const c = document.getElementById('sign-list-container');
-    c.innerHTML = lessons.map((s) => `
-      <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-        <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
-        <div class="sign-info">
-          <div class="sign-name">${s.sign_name}</div>
-          <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
-        </div>
-        <div class="sign-status-badge todo">
-          <div class="status-dot todo"></div>미시작 / Todo
-        </div>
-      </div>`).join('');
+    c.innerHTML = lessons.map((s) => {
+      const isDone = completedIds.includes(s.lesson_id);
+      return `
+        <div class="sign-item" onclick="showLearnFromDB(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <div class="sign-thumb">${emojiMap[s.sign_name] || '🤲'}</div>
+          <div class="sign-info">
+            <div class="sign-name">${s.sign_name}</div>
+            <div class="sign-diff">난이도: ${s.difficulty} / ${s.difficulty === '쉬움' ? 'Easy' : s.difficulty === '보통' ? 'Medium' : 'Hard'}</div>
+          </div>
+          <div class="sign-status-badge ${isDone ? 'done' : 'todo'}">
+            <div class="status-dot ${isDone ? 'done' : 'todo'}"></div>
+            ${isDone ? '완료 ✓' : '미시작 / Todo'}
+          </div>
+        </div>`;
+    }).join('');
     goTo('signs');
   } catch (err) {
     showToast('레슨 로드 실패 / Failed to load lessons', 'error');
@@ -1364,13 +1530,32 @@ function setFeedback(type, icon, headline, sub, score) {
   const headlineEl = document.getElementById('vfb-headline');
   const subEl = document.getElementById('vfb-sub');
   const scoreEl = document.getElementById('vfb-score');
+  
   banner.className = 'vfb-banner ' + type;
   iconEl.textContent = icon;
   headlineEl.className = 'vfb-headline ' + type;
   headlineEl.textContent = headline;
   subEl.textContent = sub;
   scoreEl.className = 'vfb-score ' + type;
-  scoreEl.textContent = score;
+
+  // Animate score counting up
+  if (score !== '—' && score.includes('%')) {
+    const targetScore = parseInt(score);
+    let current = 0;
+    const duration = 800;
+    const increment = targetScore / (duration / 16);
+    scoreEl.textContent = '0%';
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= targetScore) {
+        current = targetScore;
+        clearInterval(timer);
+      }
+      scoreEl.textContent = Math.round(current) + '%';
+    }, 16);
+  } else {
+    scoreEl.textContent = score;
+  }
 }
 
 let webcamStream = null;
@@ -1484,12 +1669,14 @@ async function doCapture() {
     showToast('카메라가 활성화되지 않았습니다 / Camera not active', 'error');
     return;
   }
+
   if (!currentSign || !currentSign.lesson_id) {
     showToast('레슨을 선택해주세요 / Please select a lesson', 'error');
     return;
   }
 
-  document.getElementById('hand-status').textContent = '분석 중... / Analyzing...';
+  document.getElementById('hand-status').textContent =
+    '분석 중... / Analyzing...';
   showToast('분석 중... / Analyzing...', 'info');
 
   const imageData = captureFrame();
@@ -1499,38 +1686,86 @@ async function doCapture() {
   try {
     const res = await fetch(`${API}/analyze`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         lesson_id: currentSign.lesson_id,
         image: imageData
       })
     });
+
+    if (!res.ok) {
+      throw new Error(`Server returned ${res.status}`);
+    }
+
     const data = await res.json();
 
+    // No hand detected
     if (!data.detected) {
-      document.getElementById('hand-status').textContent = '❌ 손 미감지 / No hand';
-      setFeedback('fail', '🤲', '손이 감지되지 않았습니다', '손을 카메라에 잘 보이게 해주세요 / Show your hand clearly', '—');
-      showToast('손을 카메라에 보여주세요 / Show your hand', 'error');
+      document.getElementById('hand-status').textContent =
+        '❌ 손 미감지 / No hand';
+
+      setFeedback(
+        'fail',
+        '🤲',
+        '손이 감지되지 않았습니다',
+        '손을 카메라에 잘 보이게 해주세요 / Show your hand clearly',
+        '—'
+      );
+
+      showToast(
+        '손을 카메라에 보여주세요 / Show your hand',
+        'error'
+      );
+
       return;
     }
 
     const score = data.score;
-    document.getElementById('hand-status').textContent = '✅ 손 감지됨 / Hand detected';
 
+    document.getElementById('hand-status').textContent =
+      '✅ 손 감지됨 / Hand detected';
+
+    // Correct sign
     if (score >= 70) {
-      if (dot) dot.className = 'attempt-dot pass';
+      if (dot) {
+        dot.className = 'attempt-dot pass';
+      }
+
       setFeedback(
-        'success', '✅',
+        'success',
+        '✅',
         '✓ 정답! / Correct!',
         '훌륭해요! 다음 수어로 넘어가보세요 / Great job!',
         score + '%'
       );
-      showToast('정답! ' + score + '% / Correct! ' + score + '%', 'success');
-      // Save to DB
+
+      showToast(
+        `정답! ${score}% / Correct! ${score}%`,
+        'success'
+      );
+
+      // 🎉 Fire confetti on perfect score
+      if (score >= 95) {
+        fireConfetti();
+        setTimeout(fireConfetti, 600);  // double burst!
+      } else {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 },
+          colors: ['#40E0D0', '#FFD700', '#2ECC71']
+        });
+      }
+
+      // Save progress
       if (currentUser && currentSign) {
-        fetch(`${API}/progress`, {
+        await fetch(`${API}/progress`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json'
+          },
           body: JSON.stringify({
             user_id: currentUser.user_id,
             lesson_id: currentSign.lesson_id,
@@ -1539,28 +1774,97 @@ async function doCapture() {
           })
         });
       }
+
+      showNextSignButton();
       failCount = 0;
-    } else {
-      if (dot) dot.className = 'attempt-dot fail';
+    }
+
+    // Wrong sign
+    else {
+      if (dot) {
+        dot.className = 'attempt-dot fail';
+      }
+
       failCount++;
+
       setFeedback(
-        'fail', '❌',
-        '✗ 다시 시도 / Try Again',
-        '조금 더 연습해보세요 / Keep practicing!',
+        'fail',
+        '❌',
+        '다시 시도해보세요 / Try Again',
+        '수어 자세를 조금 더 맞춰보세요 / Adjust your hand position',
         score + '%'
       );
-      showToast('다시 시도해보세요 / Try again (' + score + '%)', 'error');
-      if (failCount >= 3 && currentSign) {
-        document.getElementById('hint-box').className = 'hint-box visible';
-        document.getElementById('hint-content').textContent =
-          currentSign.hint || '손 위치를 조정해보세요 / Adjust your hand position';
-      }
-    }
-    attemptCount++;
 
-  } catch (err) {
-    showToast('서버 오류 / Server error', 'error');
-    console.error(err);
+      showToast(
+        `틀렸습니다 (${score}%) / Incorrect (${score}%)`,
+        'error'
+      );
+    }
+
+  } catch (error) {
+    console.error('Capture error:', error);
+
+    document.getElementById('hand-status').textContent =
+      '❌ 서버 오류 / Server Error';
+
+    showToast(
+      '서버 오류가 발생했습니다 / Server error occurred',
+      'error'
+    );
+  }
+}
+
+function showNextSignButton() {
+  // Check if there's a next sign in current category
+  const container = document.getElementById('sign-list-container');
+  const signs = container ? container.querySelectorAll('.sign-item') : [];
+
+  // Find current sign index
+  let currentIdx = -1;
+  signs.forEach((item, idx) => {
+    if (item.querySelector('.sign-name').textContent === currentSign.sign_name) {
+      currentIdx = idx;
+    }
+  });
+
+  const nextSign = signs[currentIdx + 1];
+
+  // Update the sub text with next button
+  const subEl = document.getElementById('vfb-sub');
+  if (nextSign) {
+    const nextName = nextSign.querySelector('.sign-name').textContent;
+    subEl.innerHTML = `훌륭해요! / Great job! &nbsp;
+      <button onclick="nextSign()" 
+        style="background:var(--green-ok);border:none;border-radius:var(--radius-sm);
+        padding:4px 12px;color:#fff;font-family:var(--sans);font-size:12px;
+        font-weight:700;cursor:pointer;">
+        다음: ${nextName} →
+      </button>`;
+  } else {
+    subEl.innerHTML = `🎉 카테고리 완료! / Category complete! &nbsp;
+      <button onclick="goTo('lessons')"
+        style="background:var(--yellow);border:none;border-radius:var(--radius-sm);
+        padding:4px 12px;color:var(--navy);font-family:var(--sans);font-size:12px;
+        font-weight:700;cursor:pointer;">
+        다른 카테고리 / Other Categories →
+      </button>`;
+  }
+}
+
+function nextSign() {
+  const container = document.getElementById('sign-list-container');
+  const signs = container ? container.querySelectorAll('.sign-item') : [];
+
+  let currentIdx = -1;
+  signs.forEach((item, idx) => {
+    if (item.querySelector('.sign-name').textContent === currentSign.sign_name) {
+      currentIdx = idx;
+    }
+  });
+
+  const nextSignItem = signs[currentIdx + 1];
+  if (nextSignItem) {
+    nextSignItem.click();
   }
 }
 
@@ -1681,6 +1985,118 @@ function closeAdminCamera() {
   document.getElementById('admin-camera-container').style.display = 'none';
 }
 
+let editCameraStream = null;
+let editMpHands = null;
+let editAnimationId = null;
+let editCapturedLandmark = null;
+
+async function openEditCapture() {
+  const container = document.getElementById('edit-camera-container');
+  const video = document.getElementById('edit-webcam');
+  const canvas = document.getElementById('edit-landmark-canvas');
+  const ctx = canvas.getContext('2d');
+
+  container.style.display = 'block';
+
+  try {
+    editCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 }
+    });
+    video.srcObject = editCameraStream;
+
+    editMpHands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    editMpHands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.3,
+      minTrackingConfidence: 0.5
+    });
+
+    editMpHands.onResults((results) => {
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (const landmarks of results.multiHandLandmarks) {
+          drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {
+            color: '#40E0D0', lineWidth: 2
+          });
+          drawLandmarks(ctx, landmarks, {
+            color: '#FFD700', lineWidth: 1, radius: 4
+          });
+        }
+        document.getElementById('edit-hand-status').textContent = '✅ 손 감지됨! / Hand detected!';
+        document.getElementById('edit-hand-status').style.color = 'var(--green-ok)';
+      } else {
+        document.getElementById('edit-hand-status').textContent = '❌ 손 미감지 / No hand';
+        document.getElementById('edit-hand-status').style.color = 'var(--red-err)';
+      }
+    });
+
+    async function processEditFrame() {
+      if (!editCameraStream) return;
+      await editMpHands.send({ image: video });
+      editAnimationId = setTimeout(processEditFrame, 50);
+    }
+
+    video.onloadedmetadata = () => { processEditFrame(); };
+
+  } catch (err) {
+    showToast('카메라 오류 / Camera error', 'error');
+    container.style.display = 'none';
+  }
+}
+
+async function captureEditLandmark() {
+  const video = document.getElementById('edit-webcam');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+  try {
+    const res = await fetch(`${API}/extract-landmarks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+    const data = await res.json();
+
+    if (!data.detected) {
+      showToast('손이 감지되지 않았습니다 / No hand detected', 'error');
+      return;
+    }
+
+    editCapturedLandmark = data.landmarks;
+
+    document.getElementById('edit-capture-status').innerHTML =
+      `✅ 새 랜드마크 캡처 완료! / New landmark captured! (${data.landmarks.length} points)`;
+    document.getElementById('edit-capture-status').style.color = 'var(--green-ok)';
+    document.getElementById('edit-capture-status').style.borderColor = 'rgba(46,204,113,0.3)';
+
+    showToast('랜드마크 캡처 완료! / Captured!', 'success');
+    closeEditCamera();
+
+  } catch (err) {
+    showToast('캡처 실패 / Capture failed', 'error');
+  }
+}
+
+function closeEditCamera() {
+  if (editAnimationId) { clearTimeout(editAnimationId); editAnimationId = null; }
+  if (editMpHands) { editMpHands.close(); editMpHands = null; }
+  if (editCameraStream) {
+    editCameraStream.getTracks().forEach(t => t.stop());
+    editCameraStream = null;
+  }
+  document.getElementById('edit-camera-container').style.display = 'none';
+}
+
 // ── ADMIN SUB-PAGE LOGIC ──
 let pendingDeleteKey = null;
 let editingSignKey = null;
@@ -1697,6 +2113,10 @@ function getAllSigns() {
 function goTo(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
+
+  // ← Add browser history support
+  history.pushState({ screen }, '', '#' + screen);
+
   if (screen === 'lessons') loadCategories();
   if (screen === 'dashboard') { loadUserStats(); loadDashboardCategories(); }
   if (screen === 'progress') loadUserProgress();
@@ -1705,10 +2125,30 @@ function goTo(screen) {
   if (screen === 'admin-lessons-list') buildAllLessonsList();
   if (screen === 'admin-users') loadAdminUsers();
   if (screen === 'admin-all-progress') loadAdminProgress();
-  if (screen === 'admin') loadAdminStats();        // ← only loads stat cards
+  if (screen === 'admin') loadAdminStats();
   if (screen === 'practice') startWebcam();
   if (screen !== 'practice') stopWebcam();
 }
+
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.screen) {
+    const screen = event.state.screen;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screen).classList.add('active');
+    // Reload data for the screen
+    if (screen === 'lessons') loadCategories();
+    if (screen === 'dashboard') { loadUserStats(); loadDashboardCategories(); }
+    if (screen === 'progress') loadUserProgress();
+    if (screen === 'admin-edit-sign') buildEditPicker();
+    if (screen === 'admin-delete-sign') buildDeleteList();
+    if (screen === 'admin-lessons-list') buildAllLessonsList();
+    if (screen === 'admin-users') loadAdminUsers();
+    if (screen === 'admin-all-progress') loadAdminProgress();
+    if (screen === 'admin') loadAdminStats();
+    if (screen === 'practice') startWebcam();
+    if (screen !== 'practice') stopWebcam();
+  }
+});
 
 async function loadAdminUsers() {
   const container = document.getElementById('admin-users-container');
@@ -1795,13 +2235,30 @@ async function loadAdminProgress() {
 }
 
 async function loadUserStats() {
+  // Show skeleton first
+  document.getElementById('stat-completed').innerHTML = '<div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div>';
+  document.getElementById('stat-avg').innerHTML = '<div class="skeleton skeleton-text" style="width:50px;margin:auto;"></div>';
+  document.getElementById('stat-streak').innerHTML = '<div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div>';
+
+  // Show date
+  const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+  const now = new Date();
+  const dateStr = `${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}`;
+  document.getElementById('dash-greeting-sub').textContent =
+    `${dateStr} · 오늘도 수어를 연습해볼까요? / Ready to practice!`;
+
   if (!currentUser) return;
+
+  // Small delay so skeleton is visible
+  await new Promise(resolve => setTimeout(resolve, 600));
+  console.log('currentUser:', currentUser); // ← add this
+
   try {
     const res = await fetch(`${API}/stats/${currentUser.user_id}`);
     const data = await res.json();
     document.getElementById('stat-completed').textContent = data.completed;
     document.getElementById('stat-avg').textContent = data.avg_score + '%';
-    document.getElementById('stat-remaining').textContent = data.remaining;
+    document.getElementById('stat-streak').textContent = currentUser.streak || 0;
   } catch (err) {
     console.log('Stats load error:', err);
   }
@@ -1846,6 +2303,15 @@ async function loadUserProgress() {
 }
 
 async function loadCategories() {
+  const grid = document.querySelector('#screen-lessons .cat-grid');
+
+  // Show skeleton
+    grid.innerHTML = `
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>`;
+
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
@@ -1879,6 +2345,15 @@ async function loadCategories() {
 }
 
 async function loadDashboardCategories() {
+  const container = document.getElementById('dashboard-category-list');
+
+  // Show skeleton first
+  container.innerHTML = `
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>`;
+
   try {
     const res = await fetch(`${API}/categories`);
     const categories = await res.json();
@@ -2046,22 +2521,58 @@ async function doSaveEdit() {
   const diff = document.getElementById('edit-diff').value;
   const desc = document.getElementById('edit-desc').value.trim();
   const hint = document.getElementById('edit-hint').value.trim();
-  if (!name || !desc) { showToast('이름과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+
+  if (!name || !desc) {
+    showToast('이름과 설명을 입력하세요 / Enter name and description', 'error');
+    return;
+  }
+
   try {
+    // Step 1 — Update lesson info
     const res = await fetch(`${API}/lessons/${editingSignKey.lesson_id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ sign_name: name, difficulty: diff, description: desc, hint: hint })
     });
     const data = await res.json();
-    if (res.ok) {
-      showToast('변경 사항 저장 완료 / Changes saved!', 'success');
-      document.getElementById('edit-form').style.display = 'none';
-      editingSignKey = null;
-      setTimeout(() => goTo('admin'), 700);
-    } else {
+
+    if (!res.ok) {
       showToast(data.error || '수정 실패 / Failed to update', 'error');
+      return;
     }
+
+    // Step 2 — Update landmark if re-captured
+    if (editCapturedLandmark) {
+      const landmarkJson = JSON.stringify({
+        sign_name: name,
+        category: editingSignKey.cat_name,
+        hand: 'right',
+        landmarks: editCapturedLandmark
+      });
+
+      await fetch(`${API}/gesture`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          lesson_id: editingSignKey.lesson_id,
+          landmark_json: landmarkJson
+        })
+      });
+
+      showToast('수어 + 랜드마크 업데이트 완료! / Sign + landmark updated!', 'success');
+    } else {
+      showToast('변경 사항 저장 완료 / Changes saved!', 'success');
+    }
+
+    // Reset
+    editCapturedLandmark = null;
+    document.getElementById('edit-capture-status').innerHTML =
+      'ℹ️ 선택사항 — 캡처하지 않으면 기존 랜드마크 유지 / Optional — keeps existing if not captured';
+    document.getElementById('edit-capture-status').style.color = 'var(--text-dim)';
+    document.getElementById('edit-form').style.display = 'none';
+    editingSignKey = null;
+    setTimeout(() => goTo('admin'), 700);
+
   } catch (err) {
     showToast('서버 오류 / Server error', 'error');
   }
@@ -2163,6 +2674,51 @@ function showToast(msg, type) {
   t.className = 'vfb-toast ' + type + ' show';
   setTimeout(() => { t.className = 'vfb-toast'; }, 2800);
 }
+
+function fireConfetti() {
+  // Left side
+  confetti({
+    particleCount: 80,
+    angle: 60,
+    spread: 55,
+    origin: { x: 0 },
+    colors: ['#40E0D0', '#FFD700', '#2ECC71', '#fff']
+  });
+  // Right side
+  confetti({
+    particleCount: 80,
+    angle: 120,
+    spread: 55,
+    origin: { x: 1 },
+    colors: ['#40E0D0', '#FFD700', '#2ECC71', '#fff']
+  });
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const isLight = body.classList.contains('light-mode');
+  
+  if (isLight) {
+    body.classList.remove('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '🌙');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    body.classList.add('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+    localStorage.setItem('theme', 'light');
+  }
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => btn.textContent = '☀️');
+  }
+}
+
+
+loadTheme();
 
 </script>
 </body>
