@@ -45,6 +45,14 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
 .screen { display: none; flex-direction: column; min-height: 100vh; }
 .screen.active { display: flex; }
 
+.screen {
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── TOPNAV ── */
 .topnav {
   display: flex; align-items: center; justify-content: space-between;
@@ -900,55 +908,6 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
     📷 카메라로 랜드마크 캡처 / Capture Landmark via Camera
   </button>
 
-  <!-- Camera feed (hidden until opened) -->
-  <div id="admin-camera-container" style="display:none;margin-bottom:10px;">
-    <div style="display:flex;justify-content:center;">
-      <div style="position:relative;width:500px;height:500px;">
-        <video id="admin-webcam" autoplay playsinline
-          style="width:500px;height:500px;object-fit:cover;
-          border-radius:var(--radius-lg);
-          border:1px solid var(--border-mid);
-          position:absolute;top:0;left:0;">
-        </video>
-        <canvas id="admin-landmark-canvas"
-          style="position:absolute;top:0;left:0;
-          width:500px;height:500px;
-          border-radius:var(--radius-lg);
-          pointer-events:none;">
-        </canvas>
-      </div>
-    </div>
-    <div id="admin-hand-status"
-      style="text-align:center;font-size:12px;color:var(--text-dim);
-      margin-top:8px;font-family:var(--mono);">
-      손을 카메라에 보여주세요 / Show your hand
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto;">
-      <button type="button" onclick="captureAdminLandmark()"
-        style="flex:2;background:var(--teal);border:none;border-radius:var(--radius-sm);
-        padding:11px;color:var(--navy);font-family:var(--sans);
-        font-size:13px;font-weight:700;cursor:pointer;">
-        📸 캡처 / Capture
-      </button>
-      <button type="button" onclick="closeAdminCamera()"
-        style="flex:1;background:transparent;border:1px solid var(--border-mid);
-        border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
-        font-family:var(--sans);font-size:12px;cursor:pointer;">
-        취소 / Cancel
-      </button>
-    </div>
-  </div>
-</div>
-
-  <!-- Captured status -->
-  <div id="admin-capture-status"
-    style="background:var(--navy);border:1px solid var(--border-faint);
-    border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
-    color:var(--text-dim);text-align:center;">
-    ❌ 랜드마크 미캡처 / Not captured yet
-  </div>
-</div>
-
       <button class="btn-primary" onclick="doAddSign()" style="margin-top:14px;">
         💾 저장 / Save Sign
       </button>
@@ -997,9 +956,69 @@ body { background: var(--navy); color: var(--text-bright); font-family: var(--sa
         <div style="background:var(--navy);border:1.5px dashed var(--teal-border);border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:14px;cursor:pointer;" onclick="showToast('파일 업로드 / File upload', 'info')">
           <div style="font-size:12px;color:var(--text-dim);">📁 새 파일 업로드 / Upload new file (optional)</div>
         </div>
+        <div class="field-label">랜드마크 재캡처 / Re-capture Landmark</div>
+
+        <!-- Re-capture section -->
+        <div id="edit-capture-section" style="margin-bottom:14px;">
+          <button type="button" onclick="openEditCapture()"
+            style="width:100%;background:var(--teal-dim);border:1px solid var(--teal-border);
+            border-radius:var(--radius-sm);padding:12px;color:var(--teal);
+            font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;
+            margin-bottom:10px;">
+            📷 랜드마크 재캡처 / Re-capture Landmark
+          </button>
+
+          <!-- Camera feed -->
+          <div id="edit-camera-container" style="display:none;margin-bottom:10px;">
+            <div style="display:flex;justify-content:center;">
+              <div style="position:relative;width:500px;height:500px;">
+                <video id="edit-webcam" autoplay playsinline
+                  style="width:500px;height:500px;object-fit:cover;
+                  border-radius:var(--radius-lg);
+                  border:1px solid var(--border-mid);
+                  position:absolute;top:0;left:0;">
+                </video>
+                <canvas id="edit-landmark-canvas"
+                  style="position:absolute;top:0;left:0;
+                  width:500px;height:500px;
+                  border-radius:var(--radius-lg);
+                  pointer-events:none;">
+                </canvas>
+              </div>
+            </div>
+            <div id="edit-hand-status"
+              style="text-align:center;font-size:12px;color:var(--text-dim);
+              margin-top:8px;font-family:var(--mono);">
+              손을 카메라에 보여주세요 / Show your hand
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;
+              max-width:500px;margin-left:auto;margin-right:auto;">
+              <button type="button" onclick="captureEditLandmark()"
+                style="flex:2;background:var(--teal);border:none;
+                border-radius:var(--radius-sm);padding:11px;color:var(--navy);
+                font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;">
+                📸 캡처 / Capture
+              </button>
+              <button type="button" onclick="closeEditCamera()"
+                style="flex:1;background:transparent;border:1px solid var(--border-mid);
+                border-radius:var(--radius-sm);padding:11px;color:var(--text-mid);
+                font-family:var(--sans);font-size:12px;cursor:pointer;">
+                취소 / Cancel
+              </button>
+            </div>
+          </div>
+
+          <!-- Capture status -->
+          <div id="edit-capture-status"
+            style="background:var(--navy);border:1px solid var(--border-faint);
+            border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;
+            color:var(--text-dim);text-align:center;">
+            ℹ️ 선택사항 — 캡처하지 않으면 기존 랜드마크 유지 / Optional — keeps existing if not captured
+          </div>
+        </div>
         <div class="btn-row">
           <button class="btn-capture" onclick="doSaveEdit()">💾 변경 저장 / Save Changes</button>
-          <button class="btn-sec" onclick="document.getElementById('edit-form').style.display='none'">취소</button>
+          <button class="btn-sec" onclick="closeEditCamera(); editCapturedLandmark=null; document.getElementById('edit-form').style.display='none'">취소</button>
         </div>
       </div>
     </div>
@@ -1835,6 +1854,118 @@ function closeAdminCamera() {
   document.getElementById('admin-camera-container').style.display = 'none';
 }
 
+let editCameraStream = null;
+let editMpHands = null;
+let editAnimationId = null;
+let editCapturedLandmark = null;
+
+async function openEditCapture() {
+  const container = document.getElementById('edit-camera-container');
+  const video = document.getElementById('edit-webcam');
+  const canvas = document.getElementById('edit-landmark-canvas');
+  const ctx = canvas.getContext('2d');
+
+  container.style.display = 'block';
+
+  try {
+    editCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480 }
+    });
+    video.srcObject = editCameraStream;
+
+    editMpHands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    editMpHands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.3,
+      minTrackingConfidence: 0.5
+    });
+
+    editMpHands.onResults((results) => {
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (const landmarks of results.multiHandLandmarks) {
+          drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {
+            color: '#40E0D0', lineWidth: 2
+          });
+          drawLandmarks(ctx, landmarks, {
+            color: '#FFD700', lineWidth: 1, radius: 4
+          });
+        }
+        document.getElementById('edit-hand-status').textContent = '✅ 손 감지됨! / Hand detected!';
+        document.getElementById('edit-hand-status').style.color = 'var(--green-ok)';
+      } else {
+        document.getElementById('edit-hand-status').textContent = '❌ 손 미감지 / No hand';
+        document.getElementById('edit-hand-status').style.color = 'var(--red-err)';
+      }
+    });
+
+    async function processEditFrame() {
+      if (!editCameraStream) return;
+      await editMpHands.send({ image: video });
+      editAnimationId = setTimeout(processEditFrame, 50);
+    }
+
+    video.onloadedmetadata = () => { processEditFrame(); };
+
+  } catch (err) {
+    showToast('카메라 오류 / Camera error', 'error');
+    container.style.display = 'none';
+  }
+}
+
+async function captureEditLandmark() {
+  const video = document.getElementById('edit-webcam');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+  try {
+    const res = await fetch(`${API}/extract-landmarks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData })
+    });
+    const data = await res.json();
+
+    if (!data.detected) {
+      showToast('손이 감지되지 않았습니다 / No hand detected', 'error');
+      return;
+    }
+
+    editCapturedLandmark = data.landmarks;
+
+    document.getElementById('edit-capture-status').innerHTML =
+      `✅ 새 랜드마크 캡처 완료! / New landmark captured! (${data.landmarks.length} points)`;
+    document.getElementById('edit-capture-status').style.color = 'var(--green-ok)';
+    document.getElementById('edit-capture-status').style.borderColor = 'rgba(46,204,113,0.3)';
+
+    showToast('랜드마크 캡처 완료! / Captured!', 'success');
+    closeEditCamera();
+
+  } catch (err) {
+    showToast('캡처 실패 / Capture failed', 'error');
+  }
+}
+
+function closeEditCamera() {
+  if (editAnimationId) { clearTimeout(editAnimationId); editAnimationId = null; }
+  if (editMpHands) { editMpHands.close(); editMpHands = null; }
+  if (editCameraStream) {
+    editCameraStream.getTracks().forEach(t => t.stop());
+    editCameraStream = null;
+  }
+  document.getElementById('edit-camera-container').style.display = 'none';
+}
+
 // ── ADMIN SUB-PAGE LOGIC ──
 let pendingDeleteKey = null;
 let editingSignKey = null;
@@ -2230,22 +2361,58 @@ async function doSaveEdit() {
   const diff = document.getElementById('edit-diff').value;
   const desc = document.getElementById('edit-desc').value.trim();
   const hint = document.getElementById('edit-hint').value.trim();
-  if (!name || !desc) { showToast('이름과 설명을 입력하세요 / Enter name and description', 'error'); return; }
+
+  if (!name || !desc) {
+    showToast('이름과 설명을 입력하세요 / Enter name and description', 'error');
+    return;
+  }
+
   try {
+    // Step 1 — Update lesson info
     const res = await fetch(`${API}/lessons/${editingSignKey.lesson_id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ sign_name: name, difficulty: diff, description: desc, hint: hint })
     });
     const data = await res.json();
-    if (res.ok) {
-      showToast('변경 사항 저장 완료 / Changes saved!', 'success');
-      document.getElementById('edit-form').style.display = 'none';
-      editingSignKey = null;
-      setTimeout(() => goTo('admin'), 700);
-    } else {
+
+    if (!res.ok) {
       showToast(data.error || '수정 실패 / Failed to update', 'error');
+      return;
     }
+
+    // Step 2 — Update landmark if re-captured
+    if (editCapturedLandmark) {
+      const landmarkJson = JSON.stringify({
+        sign_name: name,
+        category: editingSignKey.cat_name,
+        hand: 'right',
+        landmarks: editCapturedLandmark
+      });
+
+      await fetch(`${API}/gesture`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          lesson_id: editingSignKey.lesson_id,
+          landmark_json: landmarkJson
+        })
+      });
+
+      showToast('수어 + 랜드마크 업데이트 완료! / Sign + landmark updated!', 'success');
+    } else {
+      showToast('변경 사항 저장 완료 / Changes saved!', 'success');
+    }
+
+    // Reset
+    editCapturedLandmark = null;
+    document.getElementById('edit-capture-status').innerHTML =
+      'ℹ️ 선택사항 — 캡처하지 않으면 기존 랜드마크 유지 / Optional — keeps existing if not captured';
+    document.getElementById('edit-capture-status').style.color = 'var(--text-dim)';
+    document.getElementById('edit-form').style.display = 'none';
+    editingSignKey = null;
+    setTimeout(() => goTo('admin'), 700);
+
   } catch (err) {
     showToast('서버 오류 / Server error', 'error');
   }
