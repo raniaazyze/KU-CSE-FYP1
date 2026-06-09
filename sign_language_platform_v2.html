@@ -39,7 +39,7 @@
   --radius-lg: 16px;
 }
 
-body { background: var(--navy); color: var(--text-bright); font-family: var(--sans); min-height: 100vh; }
+body { background: var(--navy); color: var(--text-bright); font-family: var(--sans); min-height: 100vh; overflow-x: hidden;}
 
 /* ── SCREEN SYSTEM ── */
 .screen { display: none; flex-direction: column; min-height: 100vh; }
@@ -2307,10 +2307,10 @@ async function loadCategories() {
 
   // Show skeleton
     grid.innerHTML = `
-      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
-      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
-      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>
-      <div class="skeleton" style="height:160px;border-radius:var(--radius-md);"></div>`;
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-md);"></div>
+      <div class="skeleton" style="height:130px;border-radius:var(--radius-md);"></div>`;
 
   try {
     const res = await fetch(`${API}/categories`);
