@@ -2545,15 +2545,41 @@
           },
           body: JSON.stringify({
             lesson_id: currentSign.lesson_id,
-            image: imageData
+            image: imageData,
+            method: 'original' // original = normal lessons
           })
         });
+
+        // if (!res.ok) {
+        //   throw new Error(`Server returned ${res.status}`);
+        // }
+
+        // const data = await res.json();
+        
+        const data = await res.json();
+
+        // hand detected, but its landmarks cannot be scored reliably
+        if (res.status === 422 && data.scorable === false){
+          const message = data.message || '다시 촬영해주세요 / Please recapture your hand';
+
+          document.getElementById('hand-status').textContent =
+            '🤲 다시 촬영 / Please recapture';
+
+            setFeedback(
+              'fail',
+              '🤲',
+              '다시 촬영해주세요 / Please recapture',
+              message,
+              '—'
+            );
+
+            showToast(message, 'error');
+            return;
 
         if (!res.ok) {
           throw new Error(`Server returned ${res.status}`);
         }
-
-        const data = await res.json();
+        }
 
         // No hand detected
         if (!data.detected) {
@@ -2582,7 +2608,8 @@
           '✅ 손 감지됨 / Hand detected';
 
         // Correct sign
-        if (score >= 70) {
+        //if (score >= 70) {
+        if (data.passed) {
           if (dot) {
             dot.className = 'attempt-dot pass';
           }
@@ -3639,9 +3666,11 @@
         'admin-add-sign', 'admin-edit-sign', 'admin-delete-sign',
         'admin-users', 'admin-lessons-list', 'admin-all-progress'
       ];
-      if (hash && validScreens.includes(hash)) {
+      if (!currentUser) {
+          goTo('login');
+      } else if (hash && validScreens.includes(hash)) {
         goTo(hash);
-      }
+}
     });
 
   </script>
