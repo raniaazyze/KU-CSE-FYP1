@@ -20,6 +20,8 @@ import pymysql
 from werkzeug.utils import secure_filename
 
 # Local Module Imports
+from gesture_utils import compare, average, LandmarkError
+
 import config
 
 
@@ -478,47 +480,46 @@ hands_detector = mp_hands.Hands(
 )
 
 def calculate_similarity(user_landmarks, ref_landmarks):
-    """Calculate similarity between two sets of landmarks"""
-    if not user_landmarks or not ref_landmarks:
-        return 0
-    
+    # Original behavior remains the default for the learning screen.
     try:
-        # Normalize landmarks relative to wrist (point 0)
-        def normalize(landmarks):
-            wrist = landmarks[0]
-            normalized = []
-            for lm in landmarks:
-                normalized.append({
-                    'x': lm['x'] - wrist['x'],
-                    'y': lm['y'] - wrist['y'],
-                    'z': lm['z'] - wrist['z']
-                })
-            return normalized
-
-        user_norm = normalize(user_landmarks)
-        ref_norm = normalize(ref_landmarks)
-
-        # Calculate distance between each landmark
-        total_distance = 0
-        for u, r in zip(user_norm, ref_norm):
-            dist = (
-                (u['x'] - r['x']) ** 2 +
-                (u['y'] - r['y']) ** 2 +
-                (u['z'] - r['z']) ** 2
-            ) ** 0.5
-            total_distance += dist
-
-        # Average distance across all 21 points
-        avg_distance = total_distance / len(user_norm)
-
-        # Convert to similarity score (0-100)
-        # Lower distance = higher similarity
-        similarity = max(0, 100 - (avg_distance * 300))
-        return round(similarity)
-
-    except Exception as e:
-        print(f"Similarity error: {e}")
+        return compare(user_landmarks, ref_landmarks, 'original')['score']
+    except LandmarkError:
         return 0
+
+
+@app.route('/api/reference-experiment/score', methods=['POST'])
+def score_reference_experiment():
+    """Read-only: recompute saved inputs without touching the database."""
+    try:
+        data = request.get_json() or {}
+        references = data.get('references', [])
+        tests = data.get('tests', [])
+        if len(references) != 5 or len(tests) > 500:
+            raise LandmarkError('Provide five references and at most 500 tests.')
+        output = {'averages': {}, 'results': []}
+        for method in ('original', 'normalized', 'angles'):
+            try:
+                output['averages'][method] = average(references, method)
+            except LandmarkError as error:
+                output['averages'][method] = {'error': str(error)}
+        for points in tests:
+            row = {}
+            for method in ('original', 'normalized', 'angles'):
+                row[method] = {}
+                for name, reference in [('original', data.get('original')), ('newSingle', references[0]),
+                                        ('average', output['averages'][method])]:
+                    try:
+                        if isinstance(reference, dict) and 'error' in reference:
+                            raise LandmarkError(reference['error'])
+                        row[method][name] = compare(points, reference, method,
+                            300 if method == 'original' else data.get('angle_slope', 1) if method == 'angles' else data.get('slope', 30),
+                            70 if method == 'original' else data.get('angle_threshold', 80) if method == 'angles' else data.get('threshold', 70))
+                    except LandmarkError as error:
+                        row[method][name] = {'error': str(error), 'score': None, 'passed': None}
+            output['results'].append(row)
+        return jsonify(output)
+    except (LandmarkError, TypeError, KeyError) as error:
+        return jsonify({'error': str(error)}), 400
 
 # ── ANALYZE GESTURE FROM WEBCAM FRAME ──
 @app.route('/api/analyze', methods=['POST'])
@@ -582,14 +583,23 @@ def analyze_gesture():
         ref_data = json.loads(row[0])
         ref_landmarks = ref_data['landmarks']
 
-        # Calculate similarity
-        score = calculate_similarity(user_landmarks, ref_landmarks)
+        # Optional experimental method. Existing clients still use original scoring.
+        method = data.get('method', 'original')
+        try:
+            comparison = compare(user_landmarks, ref_landmarks, method,
+                data.get('slope') if method == 'normalized' else 300,
+                data.get('threshold', 70) if method == 'normalized' else 70)
+        except LandmarkError as error:
+            return jsonify({'detected': True, 'scorable': False, 'score': None,
+                            'passed': False, 'method': method, 'message': str(error)}), 422
+        score = comparison['score']
 
         return app.response_class(
             response=json.dumps({
                 'detected': True,
-                'score': score,
-                'message': '정답! / Correct!' if score >= 70 else '다시 시도 / Try Again'
+                **comparison,
+                'scorable': True,
+                'message': '정답! / Correct!' if comparison['passed'] else '다시 시도 / Try Again'
             }, ensure_ascii=False),
             status=200,
             mimetype='application/json'
