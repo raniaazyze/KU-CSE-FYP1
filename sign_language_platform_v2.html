@@ -2753,9 +2753,32 @@
         });
 
         adminMpHands.onResults((results) => {
-          canvas.width = 500;
-          canvas.height = 500;
+          //canvas.width = 500;
+          //canvas.height = 500;
+          //ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Match the overlay to the displayed video.
+          canvas.width = video.clientWidth;
+          canvas.height = video.clientHeight;
+          canvas.style.setProperty('height', `${canvas.height}px`, 'important');
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Match object-fit: cover resizing and centered cropping.
+          const scale = Math.max(
+            canvas.width / video.videoWidth,
+            canvas.height / video.videoHeight
+          );
+          const displayedWidth = video.videoWidth * scale;
+          const displayedHeight = video.videoHeight * scale;
+
+          ctx.save();
+          ctx.translate(
+            (canvas.width - displayedWidth) / 2,
+            (canvas.height - displayedHeight) / 2
+          );
+          ctx.scale(
+            displayedWidth / canvas.width,
+            displayedHeight / canvas.height
+          );
 
           if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             for (const landmarks of results.multiHandLandmarks) {
@@ -2772,6 +2795,9 @@
             document.getElementById('admin-hand-status').textContent = '❌ 손이 감지되지 않습니다 / No hand detected';
             document.getElementById('admin-hand-status').style.color = 'var(--red-err)';
           }
+          // added 
+          ctx.restore();
+
         });
 
         async function processAdminFrame() {
@@ -2869,9 +2895,32 @@
         });
 
         editMpHands.onResults((results) => {
-          canvas.width = 500;
-          canvas.height = 500;
+          //canvas.width = 500;
+          //canvas.height = 500;
+          //ctx.clearRect(0, 0, canvas.width, canvas.height);
+          // Match the overlay to the displayed video.
+          canvas.width = video.clientWidth;
+          canvas.height = video.clientHeight;
+          canvas.style.setProperty('height', `${canvas.height}px`, 'important');
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Match object-fit: cover resizing and centered cropping.
+          const scale = Math.max(
+            canvas.width / video.videoWidth,
+            canvas.height / video.videoHeight
+          );
+          const displayedWidth = video.videoWidth * scale;
+          const displayedHeight = video.videoHeight * scale;
+
+          ctx.save();
+          ctx.translate(
+            (canvas.width - displayedWidth) / 2,
+            (canvas.height - displayedHeight) / 2
+          );
+          ctx.scale(
+            displayedWidth / canvas.width,
+            displayedHeight / canvas.height
+          );
 
           if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             for (const landmarks of results.multiHandLandmarks) {
@@ -2888,6 +2937,8 @@
             document.getElementById('edit-hand-status').textContent = '❌ 손 미감지 / No hand';
             document.getElementById('edit-hand-status').style.color = 'var(--red-err)';
           }
+          // added
+          ctx.restore();
         });
 
         async function processEditFrame() {

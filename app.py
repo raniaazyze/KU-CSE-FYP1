@@ -1,17 +1,57 @@
-from flask import Flask, request, jsonify, send_file
-from flask_mysqldb import MySQL
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-from datetime import date, timedelta
-import bcrypt
-import config
-import json
+import base64
+
+# --- macOS System & Framework Configuration ---
 import os
+import matplotlib
+matplotlib.use('Agg')  # Prevents macOS GUI thread crashes with MediaPipe
+
+# Standard Library Imports
+from datetime import date, timedelta
+import json
+
+# Third-Party Imports
+import bcrypt
 import cv2
+from flask import Flask, request, jsonify, send_file, g
+from flask_cors import CORS
 import mediapipe as mp
 import numpy as np
-import base64
-import json
+import pymysql
+from werkzeug.utils import secure_filename
+
+# Local Module Imports
+import config
+
+
+# --- macOS PyMySQL Compatibility Wrapper ---
+class MySQL:
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
+        app.config.setdefault('MYSQL_HOST', 'localhost')
+        app.config.setdefault('MYSQL_USER', 'root')
+        app.config.setdefault('MYSQL_PASSWORD', '')
+        app.config.setdefault('MYSQL_DB', None)
+        app.config.setdefault('MYSQL_PORT', 3306)
+        app.config.setdefault('MYSQL_CURSORCLASS', None)
+
+    @property
+    def connection(self):
+        from flask import current_app
+        if 'mysql_connection' not in g:
+            g.mysql_connection = pymysql.connect(
+                host=current_app.config['MYSQL_HOST'],
+                user=current_app.config['MYSQL_USER'],
+                password=current_app.config['MYSQL_PASSWORD'],
+                database=current_app.config['MYSQL_DB'],
+                port=current_app.config['MYSQL_PORT'],
+                cursorclass=pymysql.cursors.Cursor
+            )
+        return g.mysql_connection
+# --- macOS PyMySQL Compatibility Wrapper ---
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -32,6 +72,12 @@ app.config['MYSQL_DB'] = config.MYSQL_DB
 app.secret_key = config.SECRET_KEY
 
 mysql = MySQL(app)
+
+@app.teardown_appcontext
+def close_mysql_connection(error):
+    connection = g.pop('mysql_connection', None)
+    if connection is not None:
+        connection.close()
 
 @app.route('/')
 def index():
@@ -227,15 +273,18 @@ def delete_lesson(lesson_id):
     cur.close()
     return jsonify({'message': '삭제 완료 / Deleted'})
 
+# -- og --
 @app.route('/api/progress', methods=['POST'])
 def save_progress():
     data = request.get_json()
+    print("Received progress payload:", data)
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO USER_PROGRESS (user_id, lesson_id, score, status) VALUES (%s,%s,%s,%s)",
                 (data['user_id'], data['lesson_id'], data['score'], data['status']))
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': '진행도 저장 / Progress saved'}), 201
+
 
 @app.route('/api/progress/<int:user_id>', methods=['GET'])
 def get_progress(user_id):

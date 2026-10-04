@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A reference experiment</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;background:#f4f7fa;color:#182b3a;margin:0}main{max-width:1020px;margin:auto;padding:24px}h1{margin-bottom:4px}h2{font-size:20px}section{background:white;border:1px solid #d9e2e9;border-radius:12px;padding:20px;margin:18px 0}.muted{color:#516473}button,input,select{font:inherit;padding:9px;border-radius:6px;border:1px solid #b3c1ce}button{cursor:pointer;background:#e8f3f3}button:disabled{opacity:.45;cursor:not-allowed}button.primary{background:#086e70;color:white}label{display:inline-block;margin:5px 12px 8px 0}input{max-width:270px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}video{display:block;max-width:100%;width:520px;height:auto;background:#15212c;border-radius:8px}.captures{display:flex;gap:8px;flex-wrap:wrap}.captures img{width:100px;border-radius:6px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e1e6eb;padding:9px;vertical-align:top}td img{width:90px}#message{background:#eaf2fb;padding:12px;border-radius:8px;white-space:pre-wrap}#message.error{background:#fff0ec;color:#8e2814}.metrics{display:flex;gap:14px;flex-wrap:wrap}.metrics div{background:#f3f7fa;padding:14px;border-radius:8px;flex:1;min-width:230px}small{display:block}details{margin-top:16px}
+</style>
+</head>
+<body><main>
+<h1>A reference experiment</h1>
+<p class="muted">Compare the original reference, new capture 1 alone, and the average of five captures on the same inputs.</p>
+<p id="message" role="status" aria-live="polite">Start your Flask app, then load the original A reference.</p>
+<section><h2>1. Load the original reference</h2>
+<p>This page finds A in your lesson database and preserves its current reference as the baseline. Do this before collecting new references.</p>
+<div class="row"><button id="load" class="primary">Load original A</button><span id="baseline">Not loaded</span></div>
+<label>Person recording <input id="participant" placeholder="e.g. Rania"></label>
+<label>Reference capture hand <select id="referenceHand"><option value="right">Right</option><option value="left">Left</option></select></label>
+<label>Conditions <input id="conditions" placeholder="Camera, light, approximate distance"></label>
+<p class="muted">Use one hand, similar distance, lighting and view for all five references. Match the original reference hand for this first experiment. Verify the A pose against your lesson demonstration.</p>
+</section>
+<section><h2>2. Capture five correct A poses</h2>
+<div class="row"><button id="start">Start camera</button><button id="stop">Stop camera</button></div>
+<video id="camera" autoplay playsinline muted></video>
+<p>The webcam is not mirrored. Hold a correct A still, capture it, relax your hand, then form A again for the next capture.</p>
+<div class="row"><button id="captureReference" class="primary">Capture correct A</button><button id="undoReference">Remove last reference</button><strong id="referenceCount">0 / 5 references</strong></div>
+<div id="references" class="captures"></div>
+<p id="averageStatus" class="muted">The average will be computed automatically after five captures.</p>
+</section>
+<section><h2>3. Capture separate test attempts</h2>
+<p>Choose the actual label <strong>before</strong> capturing. All three methods use the same saved landmarks for each attempt. Do not use reference captures as test attempts.</p>
+<p class="muted">“New single” always uses reference capture 1, chosen by capture order rather than test performance. This helps separate the effect of collecting a new reference from the effect of averaging.</p>
+<label>Actual sign <select id="label"><option value="correct">Correct A</option><option value="incorrect">Clearly not A</option><option value="uncertain">Almost A / uncertain</option></select></label>
+<label>Test hand <select id="testHand"><option value="right">Right</option><option value="left">Left</option></select></label>
+<label>Notes <input id="notes" placeholder="e.g. thumb tucked, close to camera"></label>
+<div class="row"><button id="captureTest" class="primary">Capture and compare</button><button id="undoTest">Remove last test</button></div>
+<p>Start with 5 correct A attempts and 5 clearly wrong attempts. Keep hand, view and distance similar first. Add distance or opposite-hand tests afterward and record those conditions.</p>
+<div id="metrics" class="metrics"></div>
+<p class="muted">Pass threshold: 70 for all three methods. “Almost A / uncertain” attempts are shown but excluded from the counts. Scores are similarity values, not probabilities.</p>
+<div class="table-wrap"><table><thead><tr><th>Attempt</th><th>Actual label</th><th>Original</th><th>New single (capture 1)</th><th>Average</th><th>Hand / notes</th><th>Saved frame</th></tr></thead><tbody id="tests"></tbody></table></div>
+</section>
+<section><h2>4. Save your experiment</h2>
+<p>Captures are retained in this browser where possible. Export the experiment JSON before closing: it includes the original reference, five captures, averaged reference, test frames, labels and scores. Screenshots in your earlier PDF are not automatically usable as saved landmark test inputs; collect a new paired test set here.</p>
+<div class="row"><button id="export">Download experiment JSON</button><button id="exportAverage">Download averaged A JSON</button><label>Reopen an experiment <input id="import" type="file" accept=".json,application/json"></label></div>
+<details><summary>Use the average in the main app after evaluation</summary>
+<p>“Save average to app” replaces A's database reference through your existing gesture endpoint. Download the experiment JSON first to preserve the original. The original can be restored here afterward. Make this decision after checking both rejected correct signs and accepted wrong signs.</p>
+<div class="row"><button id="apply">Save average to app</button><button id="restore">Restore original to app</button></div>
+</details>
+<p><button id="reset">Start a new experiment</button></p>
+</section></main>
+<script>
+'use strict';
+const STORAGE_KEY = 'a-reference-experiment-v1';
+const THRESHOLD = 70;
+const $ = id => document.getElementById(id);
+let state = freshState();
+let stream = null;
+let busy = false;
+function freshState() {
+  return {version:1, started_at:new Date().toISOString(), lesson_id:null,
+    original:null, references:[], tests:[], participant:'', conditions:'', referenceHand:'right'};
+}
+function validateLandmarks(points) {
+  if (!Array.isArray(points) || points.length !== 21 || points.some(p =>
+    !p || ['x','y','z'].some(k => typeof p[k] !== 'number' || !Number.isFinite(p[k])))) {
+    throw new Error('Expected exactly 21 valid x/y/z landmarks.');
+  }
+  if (points.some((p,i) => p.id !== undefined && p.id !== i)) throw new Error('Landmark IDs must be in order 0–20.');
+}
+function normalize(points) {
+  validateLandmarks(points);
+  const wrist = points[0];
+  return points.map((p,id) => ({id,x:p.x-wrist.x,y:p.y-wrist.y,z:p.z-wrist.z}));
+}
+function averageReference(samples) {
+  if (samples.length !== 5) throw new Error('Capture exactly five reference poses first.');
+  const aligned = samples.map(s => normalize(s.landmarks));
+  return aligned[0].map((_,id) => ({id,
+    x:aligned.reduce((sum,s) => sum+s[id].x,0)/5,
+    y:aligned.reduce((sum,s) => sum+s[id].y,0)/5,
+    z:aligned.reduce((sum,s) => sum+s[id].z,0)/5}));
+}
+// Match Python round() for exact halfway values.
+function roundEven(value) {
+  const lower = Math.floor(value);
+  return value-lower === 0.5 ? (lower % 2 === 0 ? lower : lower+1) : Math.round(value);
+}
+function similarity(user, reference) {
+  const u=normalize(user), r=normalize(reference);
+  let distance=0;
+  for (let i=0;i<21;i++) distance += Math.sqrt(
+    (u[i].x-r[i].x)**2 + (u[i].y-r[i].y)**2 + (u[i].z-r[i].z)**2);
+  return roundEven(Math.max(0,100-(distance/21)*300));
+}
+function counts(tests, key) {
+  const out={correctAccepted:0,correctRejected:0,wrongAccepted:0,wrongRejected:0,excluded:0};
+  for (const t of tests) {
+    if (t.label === 'uncertain') {out.excluded++; continue;}
+    const passed=t[key]>=THRESHOLD;
+    out[t.label==='correct' ? (passed?'correctAccepted':'correctRejected') : (passed?'wrongAccepted':'wrongRejected')]++;
+  }
+  return out;
+}
+function averageDocument() {
+  return {...state.original, landmarks:averageReference(state.references),
+    reference_method:'mean_of_5_wrist_aligned_poses', capture_count:5, hand:state.referenceHand};
+}
+function scoreAll() {
+  if (state.references.length!==5) return;
+  const avg=averageReference(state.references);
+  for (const t of state.tests) {
+    t.originalScore=similarity(t.landmarks,state.original.landmarks);
+    t.newSingleScore=similarity(t.landmarks,state.references[0].landmarks);
+    t.averageScore=similarity(t.landmarks,avg);
+  }
+}
+function message(text, error=false) { $('message').textContent=text; $('message').className=error?'error':''; }
+function persist() {
+  state.participant=$('participant').value;
+  state.conditions=$('conditions').value;
+  state.referenceHand=$('referenceHand').value;
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+  catch {message('Browser storage is full or unavailable. Captures are still on this page. Download experiment JSON now.',true);}
+}
+async function run(action) {
+  if (busy) return;
+  busy=true; render();
+  try {await action();} catch(e) {message(e.message,true);}
+  finally {busy=false; render();}
+}
+async function api(path, options={}) {
+  const res=await fetch('/api'+path,options);
+  const text=await res.text();
+  let data; try {data=JSON.parse(text);} catch {throw new Error(`Server returned a non-JSON response (${res.status}). Check the Flask terminal.`);}
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+  return data;
+}
+function render() {
+  const has=!!state.original, ready=state.references.length===5;
+  $('baseline').textContent=has?`A · lesson ${state.lesson_id} · baseline preserved`:'Not loaded';
+  $('referenceCount').textContent=`${state.references.length} / 5 references`;
+  $('averageStatus').textContent=ready?'Averaged reference ready. Capture new test attempts below.':'The average will be computed automatically after five captures.';
+  for (const id of ['load','start','stop','captureReference','undoReference','captureTest','undoTest','export','exportAverage','apply','restore','reset']) $(id).disabled=busy;
+  $('load').disabled=busy||has;
+  $('start').disabled=busy||!!stream;
+  $('stop').disabled=busy||!stream;
+  $('captureReference').disabled=busy||!has||!stream||ready||state.tests.length>0;
+  $('undoReference').disabled=busy||!state.references.length||state.tests.length>0;
+  $('captureTest').disabled=busy||!ready||!stream;
+  $('undoTest').disabled=busy||!state.tests.length;
+  $('export').disabled=busy||!has;
+  $('exportAverage').disabled=busy||!ready;
+  $('apply').disabled=busy||!ready||!state.tests.length;
+  $('restore').disabled=busy||!has;
+  $('import').disabled=busy;
+  $('referenceHand').disabled=busy||state.references.length>0;
+  $('references').replaceChildren();
+  state.references.forEach((s,i)=>{
+    const img=document.createElement('img'); img.src=s.image;img.alt=`Reference A ${i+1}`;$('references').append(img);
+  });
+  $('tests').replaceChildren();
+  state.tests.forEach((t,i)=>{
+    const tr=document.createElement('tr');
+    const values=[i+1,{'correct':'Correct A','incorrect':'Not A','uncertain':'Uncertain'}[t.label],
+      `${t.originalScore} / ${t.originalScore>=THRESHOLD?'Pass':'Fail'}`,
+      `${t.newSingleScore} / ${t.newSingleScore>=THRESHOLD?'Pass':'Fail'}`,
+      `${t.averageScore} / ${t.averageScore>=THRESHOLD?'Pass':'Fail'}`,`${t.hand} · ${t.notes||'—'}`];
+    values.forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td);});
+    const td=document.createElement('td'), img=document.createElement('img');img.src=t.image;img.alt=`Test ${i+1}`;td.append(img);tr.append(td);$('tests').append(tr);
+  });
+  $('metrics').replaceChildren();
+  for (const [title,key] of [['Original single reference','originalScore'],['New single reference (capture 1)','newSingleScore'],['Average of five references','averageScore']]) {
+    const c=counts(state.tests,key), box=document.createElement('div');
+    const heading=document.createElement('strong');heading.textContent=title;box.append(heading);
+    for (const line of [`Correct A accepted: ${c.correctAccepted}`,`Correct A rejected: ${c.correctRejected}`,`Wrong signs accepted: ${c.wrongAccepted}`,`Wrong signs rejected: ${c.wrongRejected}`,`Uncertain excluded: ${c.excluded}`]) {
+      const p=document.createElement('small');p.textContent=line;box.append(p);
+    }
+    $('metrics').append(box);
+  }
+}
+function stopCamera() {if(stream) stream.getTracks().forEach(t=>t.stop());stream=null;$('camera').srcObject=null;}
+async function capture() {
+  const video=$('camera');
+  if (!stream||!video.videoWidth||video.readyState<2) throw new Error('Wait for the live camera image before capturing.');
+  const canvas=document.createElement('canvas');canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  const image=canvas.toDataURL('image/jpeg',0.8);
+  const data=await api('/extract-landmarks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image})});
+  if (!data.detected) throw new Error('No hand detected. Move your full hand into view and capture again.');
+  validateLandmarks(data.landmarks);
+  return {captured_at:new Date().toISOString(),image,landmarks:data.landmarks};
+}
+function download(name,data) {
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('load').onclick=()=>run(async()=>{
+  const cats=await api('/categories'), matches=[];
+  for (const cat of cats) {
+    const lessons=await api(`/lessons/${cat.category_id}`);
+    lessons.filter(l=>l.sign_name.trim()==='A').forEach(l=>matches.push(l));
+  }
+  if (matches.length!==1) throw new Error(`Found ${matches.length} lessons named A; expected one. Check your lesson list.`);
+  const row=await api(`/gesture/${matches[0].lesson_id}`);
+  const original=typeof row.landmark_json==='string'?JSON.parse(row.landmark_json):row.landmark_json;
+  validateLandmarks(original.landmarks);
+  state.lesson_id=matches[0].lesson_id;state.original=original;
+  if (['right','left'].includes(original.hand)) $('referenceHand').value=original.hand;
+  $('testHand').value=$('referenceHand').value;
+  message('Original reference preserved. Start the camera and collect five separate correct A poses.');persist();
+});
+$('start').onclick=()=>run(async()=>{
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Open this page through http://127.0.0.1:5000/static/reference_experiment.html, not by double-clicking the file.');
+  stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+  $('camera').srcObject=stream;await $('camera').play();message('Camera ready. Keep hand, distance and view consistent for reference captures.');
+});
+$('stop').onclick=()=>{stopCamera();render();};
+$('captureReference').onclick=()=>run(async()=>{
+  if (!state.original||state.references.length>=5||state.tests.length) throw new Error('Load the baseline and collect references before testing.');
+  const sample=await capture();sample.hand=$('referenceHand').value;state.references.push(sample);
+  message(state.references.length===5?'Five references captured; the average is ready. Now collect separate test attempts.':`Reference ${state.references.length}/5 saved. Relax, then form A again.`);persist();
+});
+$('undoReference').onclick=()=>{if(!busy&&!state.tests.length){state.references.pop();persist();render();}};
+$('captureTest').onclick=()=>run(async()=>{
+  if (state.references.length!==5) throw new Error('Complete all five references first.');
+  // Record the judgment before scores are visible.
+  const label=$('label').value,hand=$('testHand').value,notes=$('notes').value;
+  const sample=await capture();state.tests.push({...sample,label,hand,notes});scoreAll();
+  message('Saved this test once and scored it against all three references.');persist();
+});
+$('undoTest').onclick=()=>{if(!busy){state.tests.pop();persist();render();}};
+$('export').onclick=()=>{persist();scoreAll();download('A_reference_experiment.json',{
+  ...state,threshold:THRESHOLD,score_method:'wrist_relative_mean_euclidean_100_minus_300d',
+  average:state.references.length===5?averageDocument():null,
+  new_single_reference_index:0,
+  summary:{original:counts(state.tests,'originalScore'),newSingle:counts(state.tests,'newSingleScore'),average:counts(state.tests,'averageScore')}});};
+$('exportAverage').onclick=()=>download('A_averaged.json',averageDocument());
+async function writeReference(doc) {
+  await api('/gesture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lesson_id:state.lesson_id,landmark_json:JSON.stringify(doc)})});
+  const saved=await api(`/gesture/${state.lesson_id}`), parsed=typeof saved.landmark_json==='string'?JSON.parse(saved.landmark_json):saved.landmark_json;
+  if (JSON.stringify(parsed.landmarks)!==JSON.stringify(doc.landmarks)) throw new Error('The reference read back differs from the requested save. Check the database connection and Flask terminal.');
+}
+$('apply').onclick=()=>{
+  if (busy||!confirm('Replace A’s reference in your database with the average? Export the experiment JSON first.')) return;
+  run(async()=>{await writeReference(averageDocument());message('Averaged reference saved and verified in the database. The original baseline on this page is preserved.');});
+};
+$('restore').onclick=()=>{
+  if (busy||!confirm('Restore the original A reference in your database?')) return;
+  run(async()=>{await writeReference(state.original);message('Original reference restored and verified in the database.');});
+};
+function validateState(s) {
+  if(s.version!==1||!Array.isArray(s.references)||s.references.length>5||!Array.isArray(s.tests)) throw new Error('Invalid experiment file.');
+  if(s.original){validateLandmarks(s.original.landmarks);if(!Number.isInteger(s.lesson_id)||s.lesson_id<1)throw new Error('Invalid lesson ID.');}
+  if((s.references.length||s.tests.length)&&!s.original)throw new Error('Missing original reference.');
+  if(s.tests.length&&s.references.length!==5)throw new Error('Test results require five references.');
+  for(const sample of [...s.references,...s.tests]){
+    validateLandmarks(sample.landmarks);
+    if(typeof sample.image!=='string'||!sample.image.startsWith('data:image/jpeg;base64,'))throw new Error('Invalid saved camera frame.');
+  }
+  if(s.tests.some(t=>!['correct','incorrect','uncertain'].includes(t.label)))throw new Error('Invalid test label.');
+}
+function populateFields() {$('participant').value=state.participant||'';$('conditions').value=state.conditions||'';$('referenceHand').value=state.referenceHand||'right';$('testHand').value=$('referenceHand').value;}
+$('import').onchange=()=>run(async()=>{
+  const file=$('import').files[0];if(!file)return;
+  const imported=JSON.parse(await file.text());validateState(imported);
+  if((state.original||state.references.length)&&!confirm('Replace the experiment currently on this page?'))return;
+  state=imported;populateFields();scoreAll();persist();message('Experiment reopened. Scores recomputed from the saved landmarks.');
+});
+$('reset').onclick=()=>{if(!busy&&confirm('Clear this browser’s experiment? Export it first. This does not change the database.')){state=freshState();populateFields();persist();render();message('New experiment ready. Load the original A reference.');}};
+['participant','conditions','referenceHand'].forEach(id=>$(id).onchange=persist);
+window.addEventListener('beforeunload',stopCamera);
+try {const saved=localStorage.getItem(STORAGE_KEY);if(saved){const parsed=JSON.parse(saved);validateState(parsed);state=parsed;populateFields();scoreAll();message('Previous experiment reopened from this browser. Export it to keep a separate backup.');}}
+catch {message('Could not reopen browser data. You can start a new experiment or import an exported JSON.',true);}
+render();
+</script>
+</body></html>
