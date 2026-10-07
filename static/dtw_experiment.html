@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moving-sign (DTW) experiment</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;background:#f4f7fa;color:#182b3a;margin:0}main{max-width:1020px;margin:auto;padding:24px}h1{margin-bottom:4px}h2{font-size:20px}section{background:white;border:1px solid #d9e2e9;border-radius:12px;padding:20px;margin:18px 0}.muted{color:#516473}button,input,select{font:inherit;padding:9px;border-radius:6px;border:1px solid #b3c1ce}button{cursor:pointer;background:#e8f3f3}button:disabled{opacity:.45;cursor:not-allowed}button.primary{background:#086e70;color:white}button.recording{background:#8e2814;color:white}label{display:inline-block;margin:5px 12px 8px 0}input{max-width:270px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}video{display:block;max-width:100%;width:520px;height:auto;background:#15212c;border-radius:8px}#message{background:#eaf2fb;padding:12px;border-radius:8px;white-space:pre-wrap}#message.error{background:#fff0ec;color:#8e2814}.metrics{display:flex;gap:14px;flex-wrap:wrap}.metrics div{background:#f3f7fa;padding:14px;border-radius:8px;flex:1;min-width:230px}small{display:block}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e1e6eb;padding:9px;vertical-align:top}td img{width:70px;border-radius:6px}
+</style>
+</head>
+<body><main>
+<h1>Moving-sign (DTW) experiment</h1>
+<p class="muted">Phase 3 prototype. Records a short burst of frames per attempt instead of one snapshot, then scores it against a reference recording with dynamic time warping. Not connected to any lesson or the live learning flow &mdash; purely for trying out thresholds.</p>
+<p id="message" role="status" aria-live="polite">Start your Flask app, then start the camera below.</p>
+
+<section><h2>1. Setup</h2>
+<label>Sign name <input id="signName" placeholder="e.g. moving sign"></label>
+<label>Person recording <input id="participant" placeholder="e.g. Rania"></label>
+<label>Conditions <input id="conditions" placeholder="Camera, light, approximate distance"></label>
+<div class="row"><button id="start">Start camera</button><button id="stop">Stop camera</button></div>
+<video id="camera" autoplay playsinline muted></video>
+<p class="muted">The webcam is not mirrored. Each recording captures frames for about 2 seconds &mdash; start the motion right after pressing record, and keep your hand in view the whole time.</p>
+</section>
+
+<section><h2>2. Record the reference motion</h2>
+<p>Perform the correct motion once, at a natural, comfortable speed. You can re-record this as many times as you like &mdash; only the latest reference is kept.</p>
+<div class="row"><button id="recordReference" class="primary">Record reference</button><strong id="referenceStatus">Not recorded</strong></div>
+</section>
+
+<section><h2>3. Record test attempts</h2>
+<p>Choose the actual label <strong>before</strong> recording, same as the static experiment &mdash; this keeps the label honest.</p>
+<label>Actual motion <select id="label"><option value="correct">Correct motion</option><option value="incorrect">Wrong motion</option></select></label>
+<label>Notes <input id="notes" placeholder="e.g. done slowly, done fast, wrong direction"></label>
+<div class="row"><button id="recordTest" class="primary">Record test attempt</button><button id="undoTest">Remove last test</button></div>
+<label>Method <select id="method"><option value="angles" selected>Finger-bend angles (matches static scoring)</option><option value="normalized">Scale-normalized distance</option></select></label>
+<label>Slope <input id="slope" type="number" min="0.001" step="0.1" value="2"></label>
+<label>Threshold <input id="threshold" type="number" min="0" max="100" value="50"></label>
+<p class="muted">These defaults are not calibrated &mdash; this prototype has no saved test data yet to calibrate against. Record several correct and several wrong attempts (including some done faster/slower than the reference), then adjust slope/threshold and recompute to see what separates them.</p>
+<p><button id="recompute">Recompute</button></p>
+<div id="metrics" class="metrics"></div>
+<div class="table-wrap"><table><thead><tr><th>Attempt</th><th>Label</th><th>Frames</th><th>Score</th><th>Notes</th><th>Preview</th></tr></thead><tbody id="tests"></tbody></table></div>
+</section>
+
+<section><h2>4. Save your experiment</h2>
+<p>Captures are retained in this browser where possible. Export the JSON to keep a permanent copy and to share results.</p>
+<div class="row"><button id="export">Download experiment JSON</button><label>Reopen an experiment <input id="import" type="file" accept=".json,application/json"></label></div>
+<p><button id="reset">Start a new experiment</button></p>
+</section></main>
+<script>
+'use strict';
+const STORAGE_KEY = 'dtw-experiment-v1';
+const RECORD_MS = 2000, FRAME_INTERVAL_MS = 150;
+const $ = id => document.getElementById(id);
+let state = freshState();
+let stream = null;
+let busy = false;
+let evaluation = null;
+function freshState() {
+  return {version:1, started_at:new Date().toISOString(), signName:'', participant:'', conditions:'',
+    reference:null, tests:[]};
+}
+function validateLandmarks(points) {
+  if (!Array.isArray(points) || points.length !== 21 || points.some(p =>
+    !p || ['x','y','z'].some(k => typeof p[k] !== 'number' || !Number.isFinite(p[k])))) {
+    throw new Error('Expected exactly 21 valid x/y/z landmarks per frame.');
+  }
+}
+function message(text, error=false) { $('message').textContent=text; $('message').className=error?'error':''; }
+function persist() {
+  state.signName=$('signName').value; state.participant=$('participant').value; state.conditions=$('conditions').value;
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+  catch {message('Browser storage is full or unavailable. Captures are still on this page. Download the JSON now.',true);}
+}
+async function run(action) {
+  if (busy) return;
+  busy=true; render();
+  try {await action();} catch(e) {message(e.message,true);}
+  finally {busy=false; render();}
+}
+async function api(path, options={}) {
+  const res=await fetch('/api'+path,options);
+  const text=await res.text();
+  let data; try {data=JSON.parse(text);} catch {throw new Error(`Server returned a non-JSON response (${res.status}). Check the Flask terminal.`);}
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`);
+  return data;
+}
+function stopCamera() {if(stream) stream.getTracks().forEach(t=>t.stop());stream=null;$('camera').srcObject=null;}
+async function recordSequence(buttonEl) {
+  const video=$('camera');
+  if (!stream||!video.videoWidth||video.readyState<2) throw new Error('Wait for the live camera image before recording.');
+  const frames=[];
+  let previewImage=null;
+  buttonEl.classList.add('recording'); const originalText=buttonEl.textContent;
+  try {
+    const start=performance.now();
+    let elapsed=0;
+    while (elapsed < RECORD_MS) {
+      buttonEl.textContent=`Recording… ${Math.ceil((RECORD_MS-elapsed)/1000)}s`;
+      const canvas=document.createElement('canvas');
+      canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+      canvas.getContext('2d').drawImage(video,0,0);
+      const image=canvas.toDataURL('image/jpeg',0.7);
+      if (!previewImage) previewImage=image;
+      try {
+        const data=await api('/extract-landmarks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image})});
+        if (data.detected) {validateLandmarks(data.landmarks); frames.push(data.landmarks);}
+      } catch { /* a single missed frame shouldn't abort the whole recording */ }
+      await new Promise(r=>setTimeout(r,FRAME_INTERVAL_MS));
+      elapsed=performance.now()-start;
+    }
+  } finally {
+    buttonEl.classList.remove('recording'); buttonEl.textContent=originalText;
+  }
+  if (frames.length < 3) throw new Error(`Only captured ${frames.length} usable frame(s) with a hand detected. Keep your hand in view the whole time and try again.`);
+  return {captured_at:new Date().toISOString(), image:previewImage, landmarks:frames};
+}
+async function scoreAll() {
+  evaluation=null;
+  if (!state.reference || !state.tests.length) {showScores(); return;}
+  const slope=Number($('slope').value), threshold=Number($('threshold').value);
+  if (!Number.isFinite(slope)||slope<=0||!Number.isFinite(threshold)||threshold<0||threshold>100)
+    throw new Error('Enter a positive slope and a threshold between 0 and 100.');
+  evaluation=await api('/dtw-experiment/score',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({reference:state.reference.landmarks, method:$('method').value, slope, threshold,
+      tests:state.tests.map(t=>({landmarks:t.landmarks}))})});
+  showScores();
+}
+function showScores() {
+  state.tests.forEach((t,i)=>{
+    const r=evaluation?.results?.[i];
+    t.score=r?.score ?? null; t.passed=r?.passed ?? null; t.scoringError=r?.error||'';
+  });
+}
+function counts() {
+  const out={correctAccepted:0,correctRejected:0,wrongAccepted:0,wrongRejected:0,excluded:0};
+  for (const t of state.tests) {
+    if (!Number.isFinite(t.score)) {out.excluded++; continue;}
+    out[t.label==='correct' ? (t.passed?'correctAccepted':'correctRejected') : (t.passed?'wrongAccepted':'wrongRejected')]++;
+  }
+  return out;
+}
+function render() {
+  const hasRef=!!state.reference;
+  $('referenceStatus').textContent=hasRef?`Recorded · ${state.reference.landmarks.length} frames`:'Not recorded';
+  for (const id of ['start','stop','recordReference','recordTest','undoTest','export','reset','recompute']) $(id).disabled=busy;
+  $('start').disabled=busy||!!stream;
+  $('stop').disabled=busy||!stream;
+  $('recordReference').disabled=busy||!stream;
+  $('recordTest').disabled=busy||!stream||!hasRef;
+  $('undoTest').disabled=busy||!state.tests.length;
+  $('export').disabled=busy||!hasRef;
+  $('recompute').disabled=busy||!hasRef||!state.tests.length;
+  $('method').disabled=busy; $('slope').disabled=busy; $('threshold').disabled=busy;
+  $('tests').replaceChildren();
+  state.tests.forEach((t,i)=>{
+    const tr=document.createElement('tr');
+    const scoreText=Number.isFinite(t.score)?`${t.score} / ${t.passed?'Pass':'Fail'}`:(t.scoringError||'Not scored');
+    const values=[i+1,{'correct':'Correct motion','incorrect':'Wrong motion'}[t.label],t.landmarks.length,scoreText,t.notes||'—'];
+    values.forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td);});
+    const td=document.createElement('td'); const img=document.createElement('img'); img.src=t.image; img.alt=`Test ${i+1} preview`; td.append(img); tr.append(td);
+    $('tests').append(tr);
+  });
+  $('metrics').replaceChildren();
+  const c=counts();
+  const box=document.createElement('div');
+  const heading=document.createElement('strong'); heading.textContent='Current settings'; box.append(heading);
+  for (const line of [`Correct accepted: ${c.correctAccepted}`,`Correct rejected: ${c.correctRejected}`,`Wrong accepted: ${c.wrongAccepted}`,`Wrong rejected: ${c.wrongRejected}`,`Unscored: ${c.excluded}`]) {
+    const p=document.createElement('small'); p.textContent=line; box.append(p);
+  }
+  $('metrics').append(box);
+}
+$('start').onclick=()=>run(async()=>{
+  if (!navigator.mediaDevices?.getUserMedia) throw new Error('Open this page through http://127.0.0.1:5000/static/dtw_experiment.html, not by double-clicking the file.');
+  stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+  $('camera').srcObject=stream; await $('camera').play();
+  message('Camera ready. Record the reference motion first.');
+});
+$('stop').onclick=()=>{stopCamera();render();};
+$('recordReference').onclick=()=>run(async()=>{
+  const sample=await recordSequence($('recordReference'));
+  state.reference=sample; persist();
+  message(`Reference recorded: ${sample.landmarks.length} frames. Now record test attempts.`);
+  await scoreAll();
+});
+$('recordTest').onclick=()=>run(async()=>{
+  if (!state.reference) throw new Error('Record the reference motion first.');
+  const label=$('label').value, notes=$('notes').value;
+  const sample=await recordSequence($('recordTest'));
+  state.tests.push({...sample,label,notes}); persist();
+  await scoreAll(); persist();
+  message(`Test recorded: ${sample.landmarks.length} frames, scored against the reference.`);
+});
+$('undoTest').onclick=()=>{if(!busy){state.tests.pop();run(async()=>{await scoreAll();persist();});}};
+$('recompute').onclick=()=>run(async()=>{await scoreAll();persist();message('Recomputed with current method/slope/threshold.');});
+$('export').onclick=()=>run(async()=>{
+  persist(); await scoreAll();
+  const name=(state.signName||'sign').replace(/[^a-z0-9_-]+/gi,'_');
+  download(`${name}_dtw_experiment.json`,{...state, method:$('method').value, slope:Number($('slope').value),
+    threshold:Number($('threshold').value), evaluation, summary:counts()});
+});
+function download(name,data) {
+  const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  const a=document.createElement('a'); a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function validateState(s) {
+  if (s.version!==1||!Array.isArray(s.tests)) throw new Error('Invalid experiment file.');
+  if (s.reference){validateLandmarks(s.reference.landmarks[0]||[]);}
+  for (const t of s.tests) {
+    if (!['correct','incorrect'].includes(t.label)) throw new Error('Invalid test label.');
+  }
+}
+function populateFields() {$('signName').value=state.signName||'';$('participant').value=state.participant||'';$('conditions').value=state.conditions||'';}
+$('import').onchange=()=>run(async()=>{
+  const file=$('import').files[0]; if(!file) return;
+  const imported=JSON.parse(await file.text()); validateState(imported);
+  if ((state.reference||state.tests.length)&&!confirm('Replace the experiment currently on this page?')) return;
+  state=imported; populateFields(); await scoreAll(); persist();
+  message('Experiment reopened. Scores recomputed from the saved frames.');
+});
+$('reset').onclick=()=>{if(!busy&&confirm('Clear this browser’s experiment? Export it first.')){state=freshState();evaluation=null;populateFields();persist();render();message('New experiment ready. Start the camera and record a reference motion.');}};
+['signName','participant','conditions'].forEach(id=>$(id).onchange=persist);
+['method','slope','threshold'].forEach(id=>$(id).onchange=()=>{evaluation=null;showScores();render();message('Settings changed. Recompute before trusting the scores.');});
+window.addEventListener('beforeunload',stopCamera);
+try {const saved=localStorage.getItem(STORAGE_KEY); if(saved){const parsed=JSON.parse(saved); validateState(parsed); state=parsed; populateFields(); message('Previous experiment reopened from this browser. Export it to keep a separate backup.');}}
+catch {message('Could not reopen browser data. You can start a new experiment or import an exported JSON.',true);}
+render();
+</script>
+</body></html>
