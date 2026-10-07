@@ -21,7 +21,7 @@ import pymysql
 from werkzeug.utils import secure_filename
 
 # Local Module Imports
-from gesture_utils import compare, average, validate, LandmarkError
+from gesture_utils import compare, average, validate, compare_sequence, LandmarkError
 
 import config
 
@@ -580,6 +580,35 @@ def score_reference_experiment():
                         row[method][name] = {'error': str(error), 'score': None, 'passed': None}
             output['results'].append(row)
         return jsonify(output)
+    except (LandmarkError, TypeError, KeyError) as error:
+        return jsonify({'error': str(error)}), 400
+
+# ── PHASE 3 PROTOTYPE: MOVING-SIGN (DTW) EXPERIMENT ──
+# Read-only, like /api/reference-experiment/score above: recomputes whatever
+# sequences are sent in the request body, writes nothing to the database,
+# and is not called from /api/analyze or the live lesson flow. A capture
+# page (modeled on static/reference_experiment.html) records a short burst
+# of frames instead of one snapshot and posts them here to try out
+# thresholds before anything gets wired into real lessons.
+@app.route('/api/dtw-experiment/score', methods=['POST'])
+def score_dtw_experiment():
+    """Read-only: recompute a saved moving-sign sequence without touching the database."""
+    try:
+        data = request.get_json() or {}
+        reference = data.get('reference', [])
+        tests = data.get('tests', [])
+        method = data.get('method', 'angles')
+        if len(tests) > 100:
+            raise LandmarkError('Provide at most 100 test sequences.')
+        results = []
+        for item in tests:
+            try:
+                r = compare_sequence(item.get('landmarks', []), reference, method,
+                                      data.get('slope'), data.get('threshold', 50))
+                results.append(r)
+            except LandmarkError as error:
+                results.append({'error': str(error), 'score': None, 'passed': None})
+        return jsonify({'results': results})
     except (LandmarkError, TypeError, KeyError) as error:
         return jsonify({'error': str(error)}), 400
 

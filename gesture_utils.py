@@ -84,3 +84,63 @@ def joint_angles(points):
         cosine=sum(x*y for x,y in zip(u,v))/(nu*nv)
         result.append(math.degrees(math.acos(max(-1,min(1,cosine)))))
     return result
+
+
+# ── PHASE 3: MOVING-SIGN COMPARISON (DTW) ──
+# A moving sign is a short sequence of frames instead of one snapshot. Speed
+# varies between attempts (someone might sign faster or slower), so frame N
+# of a test clip rarely lines up with frame N of the reference. Dynamic Time
+# Warping (DTW) finds the best alignment between two sequences of different
+# lengths before measuring how different they are, so it tolerates speed
+# variation without tolerating a genuinely different movement.
+
+def _sequence_features(frames, method):
+    """Turn a list of 21-landmark frames into a list of per-frame feature
+    vectors. 'angles' (the static-sign default) is also the default here,
+    reusing the same joint-angle feature -- no separate calibration needed."""
+    if not isinstance(frames, list) or not frames:
+        raise LandmarkError('Sequence must be a non-empty list of frames.')
+    if method == 'angles':
+        return [joint_angles(f) for f in frames]
+    if method == 'normalized':
+        return [[v for p in normalize(f, True) for v in (p['x'], p['y'], p['z'])] for f in frames]
+    raise LandmarkError('Method must be angles or normalized for sequence comparison.')
+
+def _euclidean(a, b):
+    return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
+
+def dtw_distance(seq_a, seq_b):
+    """Classic O(n*m) dynamic-time-warping distance between two equal-width
+    feature sequences. Normalized by path length so sequences of different
+    lengths (different signing speeds) stay comparable."""
+    n, m = len(seq_a), len(seq_b)
+    if n == 0 or m == 0:
+        raise LandmarkError('Sequence must have at least one frame.')
+    INF = float('inf')
+    cost = [[INF] * (m + 1) for _ in range(n + 1)]
+    cost[0][0] = 0.0
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            d = _euclidean(seq_a[i - 1], seq_b[j - 1])
+            cost[i][j] = d + min(cost[i - 1][j], cost[i][j - 1], cost[i - 1][j - 1])
+    return cost[n][m] / (n + m)
+
+def compare_sequence(user_frames, reference_frames, method='angles', slope=None, threshold=50):
+    """Score a moving sign against a reference recording. Separate from
+    compare() (static signs) and not called anywhere in the live lesson
+    flow yet -- Phase 3 prototype only, reached through its own experimental
+    endpoint so it can't affect /api/analyze."""
+    if method not in ('angles', 'normalized'):
+        raise LandmarkError('Method must be angles or normalized for sequence comparison.')
+    slope = (2 if method == 'angles' else 20) if slope is None else slope
+    if isinstance(slope, bool) or not isinstance(slope, (int, float)) or not math.isfinite(slope) or slope <= 0:
+        raise LandmarkError('Slope must be a positive finite number.')
+    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not math.isfinite(threshold) or not 0 <= threshold <= 100:
+        raise LandmarkError('Threshold must be between 0 and 100.')
+    user_feats = _sequence_features(user_frames, method)
+    ref_feats = _sequence_features(reference_frames, method)
+    distance = dtw_distance(user_feats, ref_feats)
+    score = round(max(0, 100 - slope * distance))
+    return dict(method=method, distance=distance, score=score, passed=score >= threshold,
+                slope=slope, threshold=threshold,
+                user_frames=len(user_frames), reference_frames=len(reference_frames))
