@@ -8,6 +8,7 @@ matplotlib.use('Agg')  # Prevents macOS GUI thread crashes with MediaPipe
 # Standard Library Imports
 from datetime import date, timedelta
 import json
+import threading
 
 # Third-Party Imports
 import bcrypt
@@ -20,7 +21,7 @@ import pymysql
 from werkzeug.utils import secure_filename
 
 # Local Module Imports
-from gesture_utils import compare, average, LandmarkError
+from gesture_utils import compare, average, validate, LandmarkError
 
 import config
 
@@ -80,6 +81,47 @@ def close_mysql_connection(error):
     connection = g.pop('mysql_connection', None)
     if connection is not None:
         connection.close()
+
+
+# ── SMALL HELPERS (stability) ──
+
+def json_response(payload, status=200):
+    return app.response_class(
+        response=json.dumps(payload, ensure_ascii=False),
+        status=status,
+        mimetype='application/json'
+    )
+
+
+def error_response(message, status=400):
+    return json_response({'error': message}, status)
+
+
+def get_json_body():
+    """request.get_json() but never raises on malformed/absent JSON body."""
+    return request.get_json(silent=True)
+
+
+def require_fields(data, fields):
+    """Returns the first missing/empty field name, or None if all present."""
+    if not isinstance(data, dict):
+        return fields[0] if fields else None
+    for f in fields:
+        if data.get(f) in (None, ''):
+            return f
+    return None
+
+
+@app.errorhandler(404)
+def handle_404(e):
+    return error_response('요청한 리소스를 찾을 수 없습니다 / Not found', 404)
+
+
+@app.errorhandler(500)
+def handle_500(e):
+    app.logger.error(f"Unhandled error: {e}")
+    return error_response('서버 오류가 발생했습니다 / Server error, please try again', 500)
+
 
 @app.route('/')
 def index():
@@ -426,9 +468,22 @@ def get_all_progress():
 # ── UPLOAD GESTURE DATA ──
 @app.route('/api/gesture', methods=['POST'])
 def upload_gesture():
-    data = request.get_json()
+    data = get_json_body()
+    missing = require_fields(data, ['lesson_id', 'landmark_json'])
+    if missing:
+        return error_response(f'{missing} is required / {missing}이(가) 필요합니다')
+
     lesson_id = data['lesson_id']
     landmark_json = data['landmark_json']
+
+    # Catch corrupt capture data here, at write time, instead of letting it
+    # get stored and only failing later when /api/analyze tries to read it.
+    try:
+        parsed = json.loads(landmark_json)
+        validate(parsed.get('landmarks') if isinstance(parsed, dict) else parsed)
+    except (ValueError, TypeError, AttributeError, LandmarkError) as error:
+        return error_response(f'유효하지 않은 랜드마크 데이터입니다 / Invalid landmark data: {error}')
+
     try:
         cur = mysql.connection.cursor()
         # Check if gesture data already exists for this lesson
@@ -478,6 +533,13 @@ hands_detector = mp_hands.Hands(
     max_num_hands=1,
     min_detection_confidence=0.5
 )
+# mediapipe's Hands is not thread-safe: two requests calling .process() on the
+# same detector at once can crash or return garbage landmarks. Flask's dev
+# server handles one request at a time by default, but this becomes a real
+# bug the instant threaded=True, gunicorn workers>1, or SocketIO concurrency
+# shows up, so the lock goes in now rather than as a mystery crash later.
+hands_lock = threading.Lock()
+
 
 def calculate_similarity(user_landmarks, ref_landmarks):
     # Original behavior remains the default for the learning screen.
@@ -525,12 +587,16 @@ def score_reference_experiment():
 @app.route('/api/analyze', methods=['POST'])
 def analyze_gesture():
     try:
-        data = request.get_json()
+        data = get_json_body()
+        missing = require_fields(data, ['lesson_id', 'image'])
+        if missing:
+            return error_response(f'{missing} is required / {missing}이(가) 필요합니다')
+
         lesson_id = data['lesson_id']
         image_data = data['image']  # base64 image from browser
 
         # Decode base64 image
-        image_data = image_data.split(',')[1]
+        image_data = image_data.split(',')[1] if ',' in image_data else image_data
         image_bytes = base64.b64decode(image_data)
         np_arr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -540,7 +606,8 @@ def analyze_gesture():
 
         # Run MediaPipe on the frame
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands_detector.process(rgb)
+        with hands_lock:
+            result = hands_detector.process(rgb)
 
         if not result.multi_hand_landmarks:
             return app.response_class(
@@ -584,13 +651,9 @@ def analyze_gesture():
         ref_landmarks = ref_data['landmarks']
 
         # Optional experimental method. Existing clients still use original scoring.
-        # Defaults mirror gesture_utils.compare()'s own per-method defaults
-        # (300/70 for original, 30/70 for normalized, 1/80 for angles) so a
-        # future caller that passes method='angles' without explicit
-        # slope/threshold doesn't silently get the wrong scale.
         method = data.get('method', 'original')
-        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}[method]
-        default_threshold = {'original': 70, 'normalized': 70, 'angles': 80}[method]
+        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}.get(method, 300)
+        default_threshold = {'original': 70, 'normalized': 70, 'angles': 80}.get(method, 70)
         try:
             comparison = compare(user_landmarks, ref_landmarks, method,
                 data.get('slope', default_slope),
@@ -682,7 +745,8 @@ def extract_landmarks():
             return jsonify({'detected': False, 'error': 'Invalid image'}), 400
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands_detector.process(rgb)
+        with hands_lock:
+            result = hands_detector.process(rgb)
 
         if not result.multi_hand_landmarks:
             return app.response_class(
