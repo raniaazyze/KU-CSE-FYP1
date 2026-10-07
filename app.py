@@ -584,11 +584,15 @@ def analyze_gesture():
         ref_landmarks = ref_data['landmarks']
 
         # Optional experimental method. Existing clients still use original scoring.
+        # angles: threshold 70 confirmed by Rania's same-angle recapture + 27-test
+        # held-out run on 2026-10-07 (8/9 correct accepted, 0/18 wrong accepted).
         method = data.get('method', 'original')
+        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}.get(method, 300)
+        default_threshold = {'original': 70, 'normalized': 70, 'angles': 70}.get(method, 70)
         try:
             comparison = compare(user_landmarks, ref_landmarks, method,
-                data.get('slope') if method == 'normalized' else 300,
-                data.get('threshold', 70) if method == 'normalized' else 70)
+                data.get('slope', default_slope),
+                data.get('threshold', default_threshold))
         except LandmarkError as error:
             return jsonify({'detected': True, 'scorable': False, 'score': None,
                             'passed': False, 'method': method, 'message': str(error)}), 422
