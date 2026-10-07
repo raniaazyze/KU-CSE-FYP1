@@ -584,11 +584,17 @@ def analyze_gesture():
         ref_landmarks = ref_data['landmarks']
 
         # Optional experimental method. Existing clients still use original scoring.
+        # Defaults mirror gesture_utils.compare()'s own per-method defaults
+        # (300/70 for original, 30/70 for normalized, 1/80 for angles) so a
+        # future caller that passes method='angles' without explicit
+        # slope/threshold doesn't silently get the wrong scale.
         method = data.get('method', 'original')
+        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}[method]
+        default_threshold = {'original': 70, 'normalized': 70, 'angles': 80}[method]
         try:
             comparison = compare(user_landmarks, ref_landmarks, method,
-                data.get('slope') if method == 'normalized' else 300,
-                data.get('threshold', 70) if method == 'normalized' else 70)
+                data.get('slope', default_slope),
+                data.get('threshold', default_threshold))
         except LandmarkError as error:
             return jsonify({'detected': True, 'scorable': False, 'score': None,
                             'passed': False, 'method': method, 'message': str(error)}), 422
