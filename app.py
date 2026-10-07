@@ -1,17 +1,60 @@
-from flask import Flask, request, jsonify, send_file
-from flask_mysqldb import MySQL
-from flask_cors import CORS
-from werkzeug.utils import secure_filename
-from datetime import date, timedelta
-import bcrypt
-import config
-import json
+import base64
+
+# --- macOS System & Framework Configuration ---
 import os
+import matplotlib
+matplotlib.use('Agg')  # Prevents macOS GUI thread crashes with MediaPipe
+
+# Standard Library Imports
+from datetime import date, timedelta
+import json
+import threading
+
+# Third-Party Imports
+import bcrypt
 import cv2
+from flask import Flask, request, jsonify, send_file, g
+from flask_cors import CORS
 import mediapipe as mp
 import numpy as np
-import base64
-import json
+import pymysql
+from werkzeug.utils import secure_filename
+
+# Local Module Imports
+from gesture_utils import compare, average, validate, LandmarkError
+
+import config
+
+
+# --- macOS PyMySQL Compatibility Wrapper ---
+class MySQL:
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
+        app.config.setdefault('MYSQL_HOST', 'localhost')
+        app.config.setdefault('MYSQL_USER', 'root')
+        app.config.setdefault('MYSQL_PASSWORD', '')
+        app.config.setdefault('MYSQL_DB', None)
+        app.config.setdefault('MYSQL_PORT', 3306)
+        app.config.setdefault('MYSQL_CURSORCLASS', None)
+
+    @property
+    def connection(self):
+        from flask import current_app
+        if 'mysql_connection' not in g:
+            g.mysql_connection = pymysql.connect(
+                host=current_app.config['MYSQL_HOST'],
+                user=current_app.config['MYSQL_USER'],
+                password=current_app.config['MYSQL_PASSWORD'],
+                database=current_app.config['MYSQL_DB'],
+                port=current_app.config['MYSQL_PORT'],
+                cursorclass=pymysql.cursors.Cursor
+            )
+        return g.mysql_connection
+# --- macOS PyMySQL Compatibility Wrapper ---
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -32,6 +75,53 @@ app.config['MYSQL_DB'] = config.MYSQL_DB
 app.secret_key = config.SECRET_KEY
 
 mysql = MySQL(app)
+
+@app.teardown_appcontext
+def close_mysql_connection(error):
+    connection = g.pop('mysql_connection', None)
+    if connection is not None:
+        connection.close()
+
+
+# ── SMALL HELPERS (stability) ──
+
+def json_response(payload, status=200):
+    return app.response_class(
+        response=json.dumps(payload, ensure_ascii=False),
+        status=status,
+        mimetype='application/json'
+    )
+
+
+def error_response(message, status=400):
+    return json_response({'error': message}, status)
+
+
+def get_json_body():
+    """request.get_json() but never raises on malformed/absent JSON body."""
+    return request.get_json(silent=True)
+
+
+def require_fields(data, fields):
+    """Returns the first missing/empty field name, or None if all present."""
+    if not isinstance(data, dict):
+        return fields[0] if fields else None
+    for f in fields:
+        if data.get(f) in (None, ''):
+            return f
+    return None
+
+
+@app.errorhandler(404)
+def handle_404(e):
+    return error_response('요청한 리소스를 찾을 수 없습니다 / Not found', 404)
+
+
+@app.errorhandler(500)
+def handle_500(e):
+    app.logger.error(f"Unhandled error: {e}")
+    return error_response('서버 오류가 발생했습니다 / Server error, please try again', 500)
+
 
 @app.route('/')
 def index():
@@ -227,15 +317,18 @@ def delete_lesson(lesson_id):
     cur.close()
     return jsonify({'message': '삭제 완료 / Deleted'})
 
+# -- og --
 @app.route('/api/progress', methods=['POST'])
 def save_progress():
     data = request.get_json()
+    print("Received progress payload:", data)
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO USER_PROGRESS (user_id, lesson_id, score, status) VALUES (%s,%s,%s,%s)",
                 (data['user_id'], data['lesson_id'], data['score'], data['status']))
     mysql.connection.commit()
     cur.close()
     return jsonify({'message': '진행도 저장 / Progress saved'}), 201
+
 
 @app.route('/api/progress/<int:user_id>', methods=['GET'])
 def get_progress(user_id):
@@ -375,9 +468,22 @@ def get_all_progress():
 # ── UPLOAD GESTURE DATA ──
 @app.route('/api/gesture', methods=['POST'])
 def upload_gesture():
-    data = request.get_json()
+    data = get_json_body()
+    missing = require_fields(data, ['lesson_id', 'landmark_json'])
+    if missing:
+        return error_response(f'{missing} is required / {missing}이(가) 필요합니다')
+
     lesson_id = data['lesson_id']
     landmark_json = data['landmark_json']
+
+    # Catch corrupt capture data here, at write time, instead of letting it
+    # get stored and only failing later when /api/analyze tries to read it.
+    try:
+        parsed = json.loads(landmark_json)
+        validate(parsed.get('landmarks') if isinstance(parsed, dict) else parsed)
+    except (ValueError, TypeError, AttributeError, LandmarkError) as error:
+        return error_response(f'유효하지 않은 랜드마크 데이터입니다 / Invalid landmark data: {error}')
+
     try:
         cur = mysql.connection.cursor()
         # Check if gesture data already exists for this lesson
@@ -427,60 +533,70 @@ hands_detector = mp_hands.Hands(
     max_num_hands=1,
     min_detection_confidence=0.5
 )
+# mediapipe's Hands is not thread-safe: two requests calling .process() on the
+# same detector at once can crash or return garbage landmarks. Flask's dev
+# server handles one request at a time by default, but this becomes a real
+# bug the instant threaded=True, gunicorn workers>1, or SocketIO concurrency
+# shows up, so the lock goes in now rather than as a mystery crash later.
+hands_lock = threading.Lock()
+
 
 def calculate_similarity(user_landmarks, ref_landmarks):
-    """Calculate similarity between two sets of landmarks"""
-    if not user_landmarks or not ref_landmarks:
-        return 0
-    
+    # Original behavior remains the default for the learning screen.
     try:
-        # Normalize landmarks relative to wrist (point 0)
-        def normalize(landmarks):
-            wrist = landmarks[0]
-            normalized = []
-            for lm in landmarks:
-                normalized.append({
-                    'x': lm['x'] - wrist['x'],
-                    'y': lm['y'] - wrist['y'],
-                    'z': lm['z'] - wrist['z']
-                })
-            return normalized
-
-        user_norm = normalize(user_landmarks)
-        ref_norm = normalize(ref_landmarks)
-
-        # Calculate distance between each landmark
-        total_distance = 0
-        for u, r in zip(user_norm, ref_norm):
-            dist = (
-                (u['x'] - r['x']) ** 2 +
-                (u['y'] - r['y']) ** 2 +
-                (u['z'] - r['z']) ** 2
-            ) ** 0.5
-            total_distance += dist
-
-        # Average distance across all 21 points
-        avg_distance = total_distance / len(user_norm)
-
-        # Convert to similarity score (0-100)
-        # Lower distance = higher similarity
-        similarity = max(0, 100 - (avg_distance * 300))
-        return round(similarity)
-
-    except Exception as e:
-        print(f"Similarity error: {e}")
+        return compare(user_landmarks, ref_landmarks, 'original')['score']
+    except LandmarkError:
         return 0
+
+
+@app.route('/api/reference-experiment/score', methods=['POST'])
+def score_reference_experiment():
+    """Read-only: recompute saved inputs without touching the database."""
+    try:
+        data = request.get_json() or {}
+        references = data.get('references', [])
+        tests = data.get('tests', [])
+        if len(references) != 5 or len(tests) > 500:
+            raise LandmarkError('Provide five references and at most 500 tests.')
+        output = {'averages': {}, 'results': []}
+        for method in ('original', 'normalized', 'angles'):
+            try:
+                output['averages'][method] = average(references, method)
+            except LandmarkError as error:
+                output['averages'][method] = {'error': str(error)}
+        for points in tests:
+            row = {}
+            for method in ('original', 'normalized', 'angles'):
+                row[method] = {}
+                for name, reference in [('original', data.get('original')), ('newSingle', references[0]),
+                                        ('average', output['averages'][method])]:
+                    try:
+                        if isinstance(reference, dict) and 'error' in reference:
+                            raise LandmarkError(reference['error'])
+                        row[method][name] = compare(points, reference, method,
+                            300 if method == 'original' else data.get('angle_slope', 1) if method == 'angles' else data.get('slope', 30),
+                            70 if method == 'original' else data.get('angle_threshold', 80) if method == 'angles' else data.get('threshold', 70))
+                    except LandmarkError as error:
+                        row[method][name] = {'error': str(error), 'score': None, 'passed': None}
+            output['results'].append(row)
+        return jsonify(output)
+    except (LandmarkError, TypeError, KeyError) as error:
+        return jsonify({'error': str(error)}), 400
 
 # ── ANALYZE GESTURE FROM WEBCAM FRAME ──
 @app.route('/api/analyze', methods=['POST'])
 def analyze_gesture():
     try:
-        data = request.get_json()
+        data = get_json_body()
+        missing = require_fields(data, ['lesson_id', 'image'])
+        if missing:
+            return error_response(f'{missing} is required / {missing}이(가) 필요합니다')
+
         lesson_id = data['lesson_id']
         image_data = data['image']  # base64 image from browser
 
         # Decode base64 image
-        image_data = image_data.split(',')[1]
+        image_data = image_data.split(',')[1] if ',' in image_data else image_data
         image_bytes = base64.b64decode(image_data)
         np_arr = np.frombuffer(image_bytes, np.uint8)
         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -490,7 +606,8 @@ def analyze_gesture():
 
         # Run MediaPipe on the frame
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands_detector.process(rgb)
+        with hands_lock:
+            result = hands_detector.process(rgb)
 
         if not result.multi_hand_landmarks:
             return app.response_class(
@@ -533,14 +650,27 @@ def analyze_gesture():
         ref_data = json.loads(row[0])
         ref_landmarks = ref_data['landmarks']
 
-        # Calculate similarity
-        score = calculate_similarity(user_landmarks, ref_landmarks)
+        # Optional experimental method. Existing clients still use original scoring.
+        # angles: threshold 70 confirmed by Rania's same-angle recapture + 27-test
+        # held-out run on 2026-10-07 (8/9 correct accepted, 0/18 wrong accepted).
+        method = data.get('method', 'original')
+        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}.get(method, 300)
+        default_threshold = {'original': 70, 'normalized': 70, 'angles': 70}.get(method, 70)
+        try:
+            comparison = compare(user_landmarks, ref_landmarks, method,
+                data.get('slope', default_slope),
+                data.get('threshold', default_threshold))
+        except LandmarkError as error:
+            return jsonify({'detected': True, 'scorable': False, 'score': None,
+                            'passed': False, 'method': method, 'message': str(error)}), 422
+        score = comparison['score']
 
         return app.response_class(
             response=json.dumps({
                 'detected': True,
-                'score': score,
-                'message': '정답! / Correct!' if score >= 70 else '다시 시도 / Try Again'
+                **comparison,
+                'scorable': True,
+                'message': '정답! / Correct!' if comparison['passed'] else '다시 시도 / Try Again'
             }, ensure_ascii=False),
             status=200,
             mimetype='application/json'
@@ -617,7 +747,8 @@ def extract_landmarks():
             return jsonify({'detected': False, 'error': 'Invalid image'}), 400
 
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = hands_detector.process(rgb)
+        with hands_lock:
+            result = hands_detector.process(rgb)
 
         if not result.multi_hand_landmarks:
             return app.response_class(
