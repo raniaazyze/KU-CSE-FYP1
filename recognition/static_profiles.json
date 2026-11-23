@@ -26,6 +26,58 @@
       "capture_count": 5,
       "source": "Five reference captures from A_reference_experiment_nov10_67attempts.json",
       "evaluation_scope": "Right-hand A pilot; left-hand performance remains limited."
+    },
+    "2": {
+      "enabled": true,
+      "sign_name": "B",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          148.29285956723885,
+          131.80363924722366,
+          170.99825589908568,
+          177.29907784515177,
+          171.22944686675422,
+          176.9444098937963,
+          172.06002029753625,
+          176.35550097558823,
+          177.01422646632204,
+          177.49700344947493
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-2-B_experiment.json (five reference captures)",
+      "evaluation_scope": "B experimental pilot: 10/10 correct accepted and 4/10 incorrect accepted per hand in saved evaluation; thumb-position and finger-spacing errors remain."
+    },
+    "3": {
+      "enabled": true,
+      "sign_name": "1",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          152.75016128135007,
+          154.4565193716853,
+          178.70664533709098,
+          175.2565330705536,
+          44.49737611926416,
+          167.03876645664158,
+          40.43026803790356,
+          165.09240690617878,
+          57.14263287322678,
+          164.7841622642275
+        ],
+        "reference_method": "single_capture_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 1,
+      "source": "lesson-3-1_experiment.json (reference capture 1, selected by capture order)",
+      "evaluation_scope": "Number 1 single-reference pilot: 9/10 correct right and 10/10 correct left accepted; 0/10 incorrect accepted per hand in saved evaluation."
     }
   }
 }

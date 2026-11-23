@@ -26,7 +26,9 @@ def compare_lesson(user_landmarks, reference_data, lesson_id, sign_name, request
         # Configured lessons use server-owned settings, even if an old browser sends "original".
         result = compare(user_landmarks, {'angles': angles}, 'angles',
                          profile['slope'], profile['threshold'])
-        result.update(reference_source='configured_average_angles',
+        result.update(reference_source=('configured_single_angles'
+                                        if profile['reference'].get('reference_method') == 'single_capture_joint_angles'
+                                        else 'configured_average_angles'),
                       reference_hand=profile.get('reference_hand'),
                       reference_capture_count=profile.get('capture_count'),
                       recognition_scope=profile.get('evaluation_scope'))
