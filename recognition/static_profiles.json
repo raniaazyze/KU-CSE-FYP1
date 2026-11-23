@@ -102,6 +102,58 @@
       "capture_count": 1,
       "source": "lesson-3-1_experiment.json (reference capture 1, selected by capture order)",
       "evaluation_scope": "Number 1 single-reference pilot: 9/10 correct right and 10/10 correct left accepted; 0/10 incorrect accepted per hand in saved evaluation."
+    },
+    "6": {
+      "enabled": true,
+      "sign_name": "0",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          161.85228314241823,
+          150.5453212080718,
+          113.77226563608667,
+          133.76290918731505,
+          95.89463099733238,
+          139.1539481840495,
+          92.8264678874428,
+          140.4165767858621,
+          112.7618863146052,
+          139.66514911421058
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-6-0_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 0 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+    },
+    "7": {
+      "enabled": true,
+      "sign_name": "2",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          149.04403793891942,
+          164.6711099196187,
+          175.51351479551425,
+          177.28826674537217,
+          173.63837383168524,
+          175.13077264923575,
+          60.19015110144936,
+          157.02469316130765,
+          66.78114535697748,
+          159.89556973318253
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-7-2_experiment_corrected.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 2 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
     }
   }
 }
