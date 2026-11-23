@@ -23,6 +23,8 @@ from werkzeug.utils import secure_filename
 # Local Module Imports
 from gesture_utils import compare, average, validate, LandmarkError
 
+from static_recognition import compare_lesson
+
 import config
 
 
@@ -320,13 +322,35 @@ def delete_lesson(lesson_id):
 # -- og --
 @app.route('/api/progress', methods=['POST'])
 def save_progress():
-    data = request.get_json()
-    print("Received progress payload:", data)
+    data = get_json_body()
+    missing = require_fields(data, ['user_id', 'lesson_id', 'score', 'status'])
+    if missing:
+        return error_response(f'{missing} is required')
+    score = data['score']
+    if (isinstance(score, bool) or not isinstance(score, (int, float))
+            or not np.isfinite(score) or not 0 <= score <= 100):
+        return error_response('Score must be a finite number between 0 and 100.')
     cur = mysql.connection.cursor()
-    cur.execute("INSERT INTO USER_PROGRESS (user_id, lesson_id, score, status) VALUES (%s,%s,%s,%s)",
-                (data['user_id'], data['lesson_id'], data['score'], data['status']))
-    mysql.connection.commit()
-    cur.close()
+    try:
+        # Keep the existing best-score behavior, including schemas without a unique pair key.
+        cur.execute("SELECT 1 FROM USER_PROGRESS WHERE user_id = %s AND lesson_id = %s",
+                    (data['user_id'], data['lesson_id']))
+        if cur.fetchone():
+            cur.execute("""UPDATE USER_PROGRESS
+                           SET score = GREATEST(COALESCE(score, 0), %s),
+                               status = %s, attempted_at = CURRENT_TIMESTAMP
+                           WHERE user_id = %s AND lesson_id = %s""",
+                        (score, data['status'], data['user_id'], data['lesson_id']))
+        else:
+            cur.execute("INSERT INTO USER_PROGRESS (user_id, lesson_id, score, status) VALUES (%s,%s,%s,%s)",
+                        (data['user_id'], data['lesson_id'], score, data['status']))
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        app.logger.exception('Progress save failed')
+        return error_response('Progress could not be saved. Please try again.', 500)
+    finally:
+        cur.close()
     return jsonify({'message': '진행도 저장 / Progress saved'}), 201
 
 
@@ -631,7 +655,7 @@ def analyze_gesture():
 
         # Get reference landmarks from DB
         cur = mysql.connection.cursor()
-        cur.execute("SELECT landmark_json FROM GESTURE_DATA WHERE lesson_id = %s", (lesson_id,))
+        cur.execute("SELECT G.landmark_json, L.sign_name FROM GESTURE_DATA G JOIN LESSONS L ON L.lesson_id = G.lesson_id WHERE G.lesson_id = %s", (lesson_id,))
         row = cur.fetchone()
         cur.close()
 
@@ -648,21 +672,12 @@ def analyze_gesture():
 
         # Parse reference landmarks
         ref_data = json.loads(row[0])
-        ref_landmarks = ref_data['landmarks']
-
-        # Optional experimental method. Existing clients still use original scoring.
-        # angles: threshold 70 confirmed by Rania's same-angle recapture + 27-test
-        # held-out run on 2026-10-07 (8/9 correct accepted, 0/18 wrong accepted).
-        method = data.get('method', 'original')
-        default_slope = {'original': 300, 'normalized': 30, 'angles': 1}.get(method, 300)
-        default_threshold = {'original': 70, 'normalized': 70, 'angles': 70}.get(method, 70)
+        # A uses its configured average angles; other lessons retain their existing scoring.
         try:
-            comparison = compare(user_landmarks, ref_landmarks, method,
-                data.get('slope', default_slope),
-                data.get('threshold', default_threshold))
+            comparison = compare_lesson(user_landmarks, ref_data, lesson_id, row[1], data)
         except LandmarkError as error:
             return jsonify({'detected': True, 'scorable': False, 'score': None,
-                            'passed': False, 'method': method, 'message': str(error)}), 422
+                            'passed': False, 'message': str(error)}), 422
         score = comparison['score']
 
         return app.response_class(

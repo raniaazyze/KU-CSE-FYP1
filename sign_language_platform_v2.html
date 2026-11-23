@@ -2518,7 +2518,10 @@
       return canvas.toDataURL('image/jpeg', 0.8);
     }
 
+    let captureInProgress = false;
+
     async function doCapture() {
+      if (captureInProgress) return;
       if (!webcamStream) {
         showToast('카메라가 활성화되지 않았습니다 / Camera not active', 'error');
         return;
@@ -2529,11 +2532,16 @@
         return;
       }
 
+      const capturedSign = currentSign;
+      const capturedUser = currentUser;
       document.getElementById('hand-status').textContent =
         '분석 중... / Analyzing...';
       showToast('분석 중... / Analyzing...', 'info');
 
-      const imageData = captureFrame();
+      captureInProgress = true;
+      let imageData;
+      try { imageData = captureFrame(); }
+      catch (error) { captureInProgress = false; showToast('Camera frame unavailable. Please try again.', 'error'); return; }
       const dotIdx = attemptCount % 3;
       const dot = document.getElementById('dot-' + dotIdx);
 
@@ -2544,41 +2552,30 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            lesson_id: currentSign.lesson_id,
+            lesson_id: capturedSign.lesson_id,
             image: imageData,
-            method: 'original' // original = normal lessons
+            method: 'original' // Server profile overrides this for configured lessons such as A.
           })
         });
 
-        // if (!res.ok) {
-        //   throw new Error(`Server returned ${res.status}`);
-        // }
-
-        // const data = await res.json();
-        
         const data = await res.json();
 
-        // hand detected, but its landmarks cannot be scored reliably
-        if (res.status === 422 && data.scorable === false){
+        // Ignore feedback if the learner moved to another lesson while analysis was running.
+        if (currentSign !== capturedSign || currentUser !== capturedUser) return;
+
+        if (res.status === 422 && data.scorable === false) {
           const message = data.message || '다시 촬영해주세요 / Please recapture your hand';
-
-          document.getElementById('hand-status').textContent =
-            '🤲 다시 촬영 / Please recapture';
-
-            setFeedback(
-              'fail',
-              '🤲',
-              '다시 촬영해주세요 / Please recapture',
-              message,
-              '—'
-            );
-
-            showToast(message, 'error');
-            return;
-
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
+          document.getElementById('hand-status').textContent = '🤲 다시 촬영 / Please recapture';
+          setFeedback('fail', '🤲', '다시 촬영해주세요 / Please recapture', message, '—');
+          showToast(message, 'error');
+          return;
         }
+        if (!res.ok) {
+          throw new Error(data.error || `Server returned ${res.status}`);
+        }
+        if (data.scorable === false) {
+          showToast(data.message || 'Please recapture your hand', 'error');
+          return;
         }
 
         // No hand detected
@@ -2603,13 +2600,16 @@
         }
 
         const score = data.score;
+        if (!Number.isFinite(score) || typeof data.passed !== 'boolean') {
+          throw new Error(data.message || 'The server did not return a usable recognition result.');
+        }
 
         document.getElementById('hand-status').textContent =
           '✅ 손 감지됨 / Hand detected';
 
         // Correct sign
         //if (score >= 70) {
-        if (data.passed) {
+        if (data.passed === true) {
           if (dot) {
             dot.className = 'attempt-dot pass';
           }
@@ -2640,21 +2640,27 @@
             });
           }
 
-          // Save progress
-          if (currentUser && currentSign) {
-            await fetch(`${API}/progress`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                user_id: currentUser.user_id,
-                lesson_id: currentSign.lesson_id,
-                score: score,
-                status: 'completed'
-              })
-            });
+          // Recognition success and database-save success are separate outcomes.
+          if (capturedUser) {
+            try {
+              const saved = await fetch(`${API}/progress`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  user_id: capturedUser.user_id,
+                  lesson_id: capturedSign.lesson_id,
+                  score: score,
+                  status: 'completed'
+                })
+              });
+              if (!saved.ok) throw new Error('Progress save failed');
+            } catch (saveError) {
+              console.error('Progress save error:', saveError);
+              showToast('정답이지만 진행도 저장에 실패했습니다. 다시 시도해주세요 / Correct, but progress was not saved. Please try again.', 'error');
+              return;
+            }
           }
+          if (currentSign !== capturedSign || currentUser !== capturedUser) return;
 
           showNextSignButton();
           failCount = 0;
@@ -2692,6 +2698,8 @@
           '서버 오류가 발생했습니다 / Server error occurred',
           'error'
         );
+      } finally {
+        captureInProgress = false;
       }
     }
 

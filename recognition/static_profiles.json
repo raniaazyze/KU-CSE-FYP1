@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "lessons": {
+    "1": {
+      "enabled": true,
+      "sign_name": "A",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          156.17893495721881,
+          169.21190730649687,
+          30.02048679542321,
+          143.15462134313037,
+          32.752861379875824,
+          71.83278025375925,
+          31.139623905034842,
+          91.85362658503911,
+          46.568959032532796,
+          99.14113869936673
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "Five reference captures from A_reference_experiment_nov10_67attempts.json",
+      "evaluation_scope": "Right-hand A pilot; left-hand performance remains limited."
+    }
+  }
+}
