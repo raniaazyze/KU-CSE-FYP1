@@ -84,3 +84,53 @@ def joint_angles(points):
         cosine=sum(x*y for x,y in zip(u,v))/(nu*nv)
         result.append(math.degrees(math.acos(max(-1,min(1,cosine)))))
     return result
+
+
+def hand_shape_features(points):
+    """Relative distances in MediaPipe image-landmark units, not physical lengths.
+
+    Thumb tip to little-finger base measures the thumb's position across the palm.
+    Three adjacent fingertip distances measure finger separation. Division by
+    wrist-to-middle-MCP length reduces hand-size effects. No camera-view correction.
+    """
+    values = validate(points)
+    def distance(a, b):
+        return math.sqrt(sum((values[a][k] - values[b][k]) ** 2 for k in range(3)))
+    palm = distance(0, 9)
+    if palm < 1e-6:
+        raise LandmarkError('Palm measurement is too small. Show your whole hand and recapture.')
+    return dict(zip(
+        ('thumb_to_little_base', 'index_middle_gap', 'middle_ring_gap', 'ring_little_gap'),
+        [distance(a, b) / palm for a, b in ((4, 17), (8, 12), (12, 16), (16, 20))]
+    ))
+
+
+def apply_shape_checks(points, comparison, settings):
+    """Supplement bend scoring with reference-based distance limits for the B pilot."""
+    if settings.get('enabled') is not True:
+        return comparison
+    if settings.get('version') != 1:
+        raise LandmarkError('Unsupported shape-check version.')
+    limits = settings.get('upper_limits')
+    names = ('thumb_to_little_base', 'index_middle_gap', 'middle_ring_gap', 'ring_little_gap')
+    if (not isinstance(limits, dict) or set(limits) != set(names)
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or v <= 0 for v in limits.values())):
+        raise LandmarkError('Shape limits must be positive finite numbers.')
+    features = hand_shape_features(points)
+    ratios = {key: features[key] / limits[key] for key in names}
+    checks = {key: ratios[key] <= 1 for key in names}
+    threshold = comparison['threshold']
+    # At a limit, the supplementary score equals the passing threshold.
+    # Floor avoids rounding a just-outside-limit measurement back into a pass.
+    shape_score = math.floor(max(0, 100 - (100 - threshold) * max(ratios.values())))
+    failed = [key for key, passed in checks.items() if not passed]
+    if failed:
+        shape_score = min(shape_score, max(0, math.ceil(threshold) - 1))
+    result = dict(comparison)
+    result.update(angle_score=comparison['score'], shape_score=shape_score,
+                  shape_features=features, shape_limits=limits, shape_checks=checks,
+                  shape_checks_version=1, shape_failed_features=failed)
+    result['score'] = min(comparison['score'], shape_score)
+    result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
+    return result

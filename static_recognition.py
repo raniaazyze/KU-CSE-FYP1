@@ -2,7 +2,7 @@
 import json
 import math
 from pathlib import Path
-from gesture_utils import compare, LandmarkError
+from gesture_utils import compare, apply_shape_checks, LandmarkError
 
 PROFILE_PATH = Path(__file__).resolve().parent / 'recognition' / 'static_profiles.json'
 
@@ -26,6 +26,8 @@ def compare_lesson(user_landmarks, reference_data, lesson_id, sign_name, request
         # Configured lessons use server-owned settings, even if an old browser sends "original".
         result = compare(user_landmarks, {'angles': angles}, 'angles',
                          profile['slope'], profile['threshold'])
+        if profile.get('shape_checks', {}).get('enabled') is True:
+            result = apply_shape_checks(user_landmarks, result, profile['shape_checks'])
         result.update(reference_source=('configured_single_angles'
                                         if profile['reference'].get('reference_method') == 'single_capture_joint_angles'
                                         else 'configured_average_angles'),

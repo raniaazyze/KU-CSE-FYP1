@@ -51,7 +51,31 @@
       "reference_hand": "right",
       "capture_count": 5,
       "source": "lesson-2-B_experiment.json (five reference captures)",
-      "evaluation_scope": "B experimental pilot: 10/10 correct accepted and 4/10 incorrect accepted per hand in saved evaluation; thumb-position and finger-spacing errors remain."
+      "evaluation_scope": "B experimental pilot: bend angles plus thumb-position and fingertip-spacing limits. Fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 1,
+        "upper_limits": {
+          "thumb_to_little_base": 0.5449552147057785,
+          "index_middle_gap": 0.28304301110571306,
+          "middle_ring_gap": 0.2921154417505085,
+          "ring_little_gap": 0.4467392959736124
+        },
+        "reference_maxima": {
+          "thumb_to_little_base": 0.39495521470577843,
+          "index_middle_gap": 0.18304301110571308,
+          "middle_ring_gap": 0.19211544175050851,
+          "ring_little_gap": 0.3467392959736124
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15,
+          "index_middle_gap": 0.1,
+          "middle_ring_gap": 0.1,
+          "ring_little_gap": 0.1
+        },
+        "construction": "Maximum feature value across the five right-hand B references plus a provisional margin, in palm-length units.",
+        "validation_scope": "Development comparison on the existing 40 B tests; fresh-data evaluation is required. These tests have been inspected during development."
+      }
     },
     "3": {
       "enabled": true,
