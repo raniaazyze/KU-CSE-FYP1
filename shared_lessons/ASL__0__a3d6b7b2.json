@@ -1,0 +1,178 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "0"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "0",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "Curl all four fingers of your main hand around so their tips touch the tip of your thumb (주손의 네 손가락을 모두 엄지 끝에 닿도록 감아주세요.)",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "0",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3029,
+        "y": 0.6444,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.3815,
+        "y": 0.5993,
+        "z": 0.0535
+      },
+      {
+        "id": 2,
+        "x": 0.4219,
+        "y": 0.5526,
+        "z": 0.0704
+      },
+      {
+        "id": 3,
+        "x": 0.4582,
+        "y": 0.5143,
+        "z": 0.0651
+      },
+      {
+        "id": 4,
+        "x": 0.4646,
+        "y": 0.4589,
+        "z": 0.0585
+      },
+      {
+        "id": 5,
+        "x": 0.3641,
+        "y": 0.4582,
+        "z": 0.1273
+      },
+      {
+        "id": 6,
+        "x": 0.3992,
+        "y": 0.403,
+        "z": 0.1304
+      },
+      {
+        "id": 7,
+        "x": 0.4328,
+        "y": 0.4135,
+        "z": 0.1144
+      },
+      {
+        "id": 8,
+        "x": 0.4452,
+        "y": 0.4482,
+        "z": 0.1047
+      },
+      {
+        "id": 9,
+        "x": 0.3507,
+        "y": 0.4507,
+        "z": 0.0861
+      },
+      {
+        "id": 10,
+        "x": 0.3918,
+        "y": 0.3778,
+        "z": 0.0871
+      },
+      {
+        "id": 11,
+        "x": 0.4311,
+        "y": 0.4037,
+        "z": 0.0639
+      },
+      {
+        "id": 12,
+        "x": 0.4467,
+        "y": 0.446,
+        "z": 0.051
+      },
+      {
+        "id": 13,
+        "x": 0.3382,
+        "y": 0.4434,
+        "z": 0.0414
+      },
+      {
+        "id": 14,
+        "x": 0.3806,
+        "y": 0.3685,
+        "z": 0.0424
+      },
+      {
+        "id": 15,
+        "x": 0.424,
+        "y": 0.3991,
+        "z": 0.0333
+      },
+      {
+        "id": 16,
+        "x": 0.44,
+        "y": 0.441,
+        "z": 0.0291
+      },
+      {
+        "id": 17,
+        "x": 0.3337,
+        "y": 0.4443,
+        "z": -0.0014
+      },
+      {
+        "id": 18,
+        "x": 0.3836,
+        "y": 0.3908,
+        "z": 0.0019
+      },
+      {
+        "id": 19,
+        "x": 0.4209,
+        "y": 0.4079,
+        "z": 0.0049
+      },
+      {
+        "id": 20,
+        "x": 0.4391,
+        "y": 0.4351,
+        "z": 0.0079
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "0",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        161.85228314241823,
+        150.5453212080718,
+        113.77226563608667,
+        133.76290918731505,
+        95.89463099733238,
+        139.1539481840495,
+        92.8264678874428,
+        140.4165767858621,
+        112.7618863146052,
+        139.66514911421058
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-6-0_experiment.json (five right-hand reference captures)",
+    "evaluation_scope": "Number 0 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+  },
+  "assets": []
+}

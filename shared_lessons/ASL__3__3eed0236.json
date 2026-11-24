@@ -1,0 +1,193 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "3"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "3",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "Extend your thumb, index, and middle fingers upward while curling your ring and pinky fingers into your palm.  / 엄지, 검지, 중지를 위로 뻗고, 약지와 손가락은 손바닥 쪽으로 말아주세요.",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "3",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3494,
+        "y": 0.7969,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.4186,
+        "y": 0.7827,
+        "z": -0.0254
+      },
+      {
+        "id": 2,
+        "x": 0.4708,
+        "y": 0.7187,
+        "z": -0.0267
+      },
+      {
+        "id": 3,
+        "x": 0.5152,
+        "y": 0.6646,
+        "z": -0.0273
+      },
+      {
+        "id": 4,
+        "x": 0.5542,
+        "y": 0.6507,
+        "z": -0.0272
+      },
+      {
+        "id": 5,
+        "x": 0.4452,
+        "y": 0.5971,
+        "z": 0.0047
+      },
+      {
+        "id": 6,
+        "x": 0.4747,
+        "y": 0.5185,
+        "z": 0.0008
+      },
+      {
+        "id": 7,
+        "x": 0.4908,
+        "y": 0.4669,
+        "z": -0.0058
+      },
+      {
+        "id": 8,
+        "x": 0.5035,
+        "y": 0.4223,
+        "z": -0.0138
+      },
+      {
+        "id": 9,
+        "x": 0.4073,
+        "y": 0.5793,
+        "z": 0.0063
+      },
+      {
+        "id": 10,
+        "x": 0.4071,
+        "y": 0.4896,
+        "z": -0.0023
+      },
+      {
+        "id": 11,
+        "x": 0.4081,
+        "y": 0.4248,
+        "z": -0.0152
+      },
+      {
+        "id": 12,
+        "x": 0.4071,
+        "y": 0.3706,
+        "z": -0.0249
+      },
+      {
+        "id": 13,
+        "x": 0.3714,
+        "y": 0.5876,
+        "z": 0.0036
+      },
+      {
+        "id": 14,
+        "x": 0.362,
+        "y": 0.5057,
+        "z": -0.0248
+      },
+      {
+        "id": 15,
+        "x": 0.3646,
+        "y": 0.5338,
+        "z": -0.0404
+      },
+      {
+        "id": 16,
+        "x": 0.3649,
+        "y": 0.5628,
+        "z": -0.0449
+      },
+      {
+        "id": 17,
+        "x": 0.3365,
+        "y": 0.6147,
+        "z": -0.0009
+      },
+      {
+        "id": 18,
+        "x": 0.3286,
+        "y": 0.5797,
+        "z": -0.0366
+      },
+      {
+        "id": 19,
+        "x": 0.3353,
+        "y": 0.6183,
+        "z": -0.0514
+      },
+      {
+        "id": 20,
+        "x": 0.3437,
+        "y": 0.6573,
+        "z": -0.0558
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "3",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        178.4205146001519,
+        155.00878451451982,
+        173.63953298516506,
+        176.21978058249414,
+        173.02966609246235,
+        178.10291731835363,
+        70.07183107193589,
+        149.64625620048224,
+        67.29911168665677,
+        164.6705625881491
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-8-3_experiment.json (five right-hand reference captures)",
+    "evaluation_scope": "Number 3 development pilot: averaged bend angles plus minimum thumb separation; saved tests inspected during development, fresh-data evaluation pending.",
+    "shape_checks": {
+      "enabled": true,
+      "version": 2,
+      "lower_limits": {
+        "thumb_to_little_base": 0.7180750151540461
+      },
+      "reference_minima": {
+        "thumb_to_little_base": 0.8680750151540462
+      },
+      "additive_margins": {
+        "thumb_to_little_base": 0.15
+      },
+      "construction": "Minimum thumb-tip (4) to little-finger MCP (17) distance across five right-hand references, divided by wrist (0) to middle MCP (9) distance, minus a provisional 0.15 palm-length margin.",
+      "validation_scope": "Development replay of the same 40 tests used to inspect the error. Freeze this rule before collecting fresh test inputs."
+    }
+  },
+  "assets": []
+}

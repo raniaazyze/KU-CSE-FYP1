@@ -1,0 +1,178 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "2"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "2",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "Extend your index and middle fingers straight up in a \"V\" shape. /  검지와 중지를 위로 곧게 뻗어 'V'자 모양을 만드세요.",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "2",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3527,
+        "y": 0.7235,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.3858,
+        "y": 0.713,
+        "z": -0.0535
+      },
+      {
+        "id": 2,
+        "x": 0.3894,
+        "y": 0.6579,
+        "z": -0.0787
+      },
+      {
+        "id": 3,
+        "x": 0.3514,
+        "y": 0.6002,
+        "z": -0.0979
+      },
+      {
+        "id": 4,
+        "x": 0.3089,
+        "y": 0.5551,
+        "z": -0.115
+      },
+      {
+        "id": 5,
+        "x": 0.4146,
+        "y": 0.5302,
+        "z": -0.0436
+      },
+      {
+        "id": 6,
+        "x": 0.4513,
+        "y": 0.4502,
+        "z": -0.0702
+      },
+      {
+        "id": 7,
+        "x": 0.4708,
+        "y": 0.3991,
+        "z": -0.0887
+      },
+      {
+        "id": 8,
+        "x": 0.4865,
+        "y": 0.3541,
+        "z": -0.1021
+      },
+      {
+        "id": 9,
+        "x": 0.3707,
+        "y": 0.5162,
+        "z": -0.0347
+      },
+      {
+        "id": 10,
+        "x": 0.3601,
+        "y": 0.4206,
+        "z": -0.0675
+      },
+      {
+        "id": 11,
+        "x": 0.3493,
+        "y": 0.3575,
+        "z": -0.0897
+      },
+      {
+        "id": 12,
+        "x": 0.3402,
+        "y": 0.302,
+        "z": -0.101
+      },
+      {
+        "id": 13,
+        "x": 0.3352,
+        "y": 0.5363,
+        "z": -0.0303
+      },
+      {
+        "id": 14,
+        "x": 0.3067,
+        "y": 0.4756,
+        "z": -0.078
+      },
+      {
+        "id": 15,
+        "x": 0.3141,
+        "y": 0.5236,
+        "z": -0.0905
+      },
+      {
+        "id": 16,
+        "x": 0.3246,
+        "y": 0.5595,
+        "z": -0.0869
+      },
+      {
+        "id": 17,
+        "x": 0.3101,
+        "y": 0.5774,
+        "z": -0.0292
+      },
+      {
+        "id": 18,
+        "x": 0.2908,
+        "y": 0.5546,
+        "z": -0.0759
+      },
+      {
+        "id": 19,
+        "x": 0.3027,
+        "y": 0.5957,
+        "z": -0.0849
+      },
+      {
+        "id": 20,
+        "x": 0.3199,
+        "y": 0.629,
+        "z": -0.0808
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "2",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        149.04403793891942,
+        164.6711099196187,
+        175.51351479551425,
+        177.28826674537217,
+        173.63837383168524,
+        175.13077264923575,
+        60.19015110144936,
+        157.02469316130765,
+        66.78114535697748,
+        159.89556973318253
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-7-2_experiment_corrected.json (five right-hand reference captures)",
+    "evaluation_scope": "Number 2 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+  },
+  "assets": []
+}
