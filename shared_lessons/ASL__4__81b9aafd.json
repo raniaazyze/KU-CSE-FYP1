@@ -1,0 +1,198 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "4"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "4",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "Extend all four fingers upward and spread them apart with your thumb tucked into your palm. / 네 손가락을 모두 위로 뻗고 엄지를 손바닥 안쪽으로 접은 채 벌리세요",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "4",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3355,
+        "y": 0.8455,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.3855,
+        "y": 0.8379,
+        "z": -0.0333
+      },
+      {
+        "id": 2,
+        "x": 0.4165,
+        "y": 0.7594,
+        "z": -0.0423
+      },
+      {
+        "id": 3,
+        "x": 0.3803,
+        "y": 0.6913,
+        "z": -0.0463
+      },
+      {
+        "id": 4,
+        "x": 0.3303,
+        "y": 0.6763,
+        "z": -0.0498
+      },
+      {
+        "id": 5,
+        "x": 0.4306,
+        "y": 0.6606,
+        "z": -0.0225
+      },
+      {
+        "id": 6,
+        "x": 0.4631,
+        "y": 0.5854,
+        "z": -0.0364
+      },
+      {
+        "id": 7,
+        "x": 0.4839,
+        "y": 0.5327,
+        "z": -0.0494
+      },
+      {
+        "id": 8,
+        "x": 0.4974,
+        "y": 0.4891,
+        "z": -0.06
+      },
+      {
+        "id": 9,
+        "x": 0.3922,
+        "y": 0.6331,
+        "z": -0.019
+      },
+      {
+        "id": 10,
+        "x": 0.4133,
+        "y": 0.5467,
+        "z": -0.0295
+      },
+      {
+        "id": 11,
+        "x": 0.4265,
+        "y": 0.4886,
+        "z": -0.043
+      },
+      {
+        "id": 12,
+        "x": 0.4347,
+        "y": 0.4407,
+        "z": -0.0524
+      },
+      {
+        "id": 13,
+        "x": 0.3556,
+        "y": 0.6344,
+        "z": -0.0194
+      },
+      {
+        "id": 14,
+        "x": 0.3608,
+        "y": 0.551,
+        "z": -0.0337
+      },
+      {
+        "id": 15,
+        "x": 0.3636,
+        "y": 0.4957,
+        "z": -0.0507
+      },
+      {
+        "id": 16,
+        "x": 0.364,
+        "y": 0.4478,
+        "z": -0.0618
+      },
+      {
+        "id": 17,
+        "x": 0.3178,
+        "y": 0.6557,
+        "z": -0.0226
+      },
+      {
+        "id": 18,
+        "x": 0.3103,
+        "y": 0.5949,
+        "z": -0.0396
+      },
+      {
+        "id": 19,
+        "x": 0.3044,
+        "y": 0.5538,
+        "z": -0.0502
+      },
+      {
+        "id": 20,
+        "x": 0.2985,
+        "y": 0.5132,
+        "z": -0.0564
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "4",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        134.59928863530723,
+        139.75508535048667,
+        175.8632359694621,
+        175.7025430817676,
+        175.88376473397452,
+        175.23324673519053,
+        174.02211037145207,
+        175.6047437641975,
+        177.3044416344467,
+        172.7770689673727
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-9-4_experiment(1).json (five right-hand reference captures)",
+    "evaluation_scope": "Number 4 development pilot: averaged bend angles, maximum thumb separation and minimum middle-ring fingertip gap. Fresh-data evaluation pending.",
+    "shape_checks": {
+      "enabled": true,
+      "version": 3,
+      "upper_limits": {
+        "thumb_to_little_base": 0.3928517828330675
+      },
+      "lower_limits": {
+        "middle_ring_gap": 0.25401664834539356
+      },
+      "reference_extrema": {
+        "thumb_to_little_base_max": 0.2428517828330675,
+        "middle_ring_gap_min": 0.30401664834539355
+      },
+      "additive_margins": {
+        "thumb_to_little_base_upper": 0.15,
+        "middle_ring_gap_lower": 0.05
+      },
+      "construction": "Five right-hand references: thumb tip (4) to little MCP (17) maximum + 0.15; middle (12) to ring (16) fingertip distance minimum - 0.05. Distances divided by wrist (0) to middle MCP (9). Provisional margins.",
+      "validation_scope": "Features selected after inspecting the 40 number 4 tests; saved-input replay is development evidence, not fresh validation."
+    }
+  },
+  "assets": []
+}

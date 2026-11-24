@@ -1763,6 +1763,37 @@
           <button class="btn-sec" onclick="resetPractice()">↺ 리셋</button>
           <button class="btn-sec" onclick="stopWebcam(); goTo('learn')">← 학습</button>
         </div>
+        <details id="practice-diagnostics" style="display:none;margin-top:20px;border:1px solid var(--border-faint);padding:14px;border-radius:12px;">
+          <summary>실험 기록 / Test recording</summary>
+          <p>Choose the actual pose and hand BEFORE capture. Records contain photos and stay in this tab until downloaded. Normal lesson progress saving still applies.</p>
+          <label><input type="checkbox" id="diag-enabled"> Record captures for testing</label>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;">
+            <label>Actual pose
+              <select id="diag-label" class="field-input">
+                <option value="">Choose before capture</option>
+                <option value="correct">Correct for this lesson</option>
+                <option value="incorrect">Incorrect for this lesson</option>
+                <option value="no_hand">No hand</option>
+              </select>
+            </label>
+            <label>Hand
+              <select id="diag-hand" class="field-input">
+                <option value="">Choose hand</option>
+                <option value="right">Right</option><option value="left">Left</option>
+                <option value="none">No hand</option>
+              </select>
+            </label>
+            <label>Pose name / notes
+              <input id="diag-notes" class="field-input" placeholder="e.g. B, correct left 4" maxlength="500">
+            </label>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <button type="button" class="btn-sec" onclick="downloadPracticeDiagnostics()">Download test JSON</button>
+            <button type="button" class="btn-sec" onclick="clearPracticeDiagnostics()">Clear records</button>
+          </div>
+          <p id="diag-count" role="status" aria-live="polite">0 records</p>
+          <div id="diag-recent" style="max-height:280px;overflow:auto;"></div>
+        </details>
       </div>
     </div>
 
@@ -2519,6 +2550,106 @@
     }
 
     let captureInProgress = false;
+    // Opt-in developer panel; normal learners do not see it.
+    const diagnosticMode = new URLSearchParams(window.location.search).get('diagnostics') === '1';
+    document.getElementById('practice-diagnostics').style.display = diagnosticMode ? 'block' : 'none';
+    let practiceDiagnosticRecords = [];
+    let diagnosticDownloadedCount = 0;
+    const diagnosticSessionId = new Date().toISOString();
+    const diagnosticLimit = 100;
+
+    function diagnosticSelection() {
+      if (!diagnosticMode || !document.getElementById('diag-enabled').checked) return null;
+      const label = document.getElementById('diag-label').value;
+      const hand = document.getElementById('diag-hand').value;
+      if (!label || !hand || (label === 'no_hand') !== (hand === 'none')) {
+        throw new Error('Choose the actual pose and matching hand before capture.');
+      }
+      if (practiceDiagnosticRecords.length >= diagnosticLimit) {
+        throw new Error('100 records reached. Download the JSON, then clear records before continuing.');
+      }
+      return {label, hand, notes: document.getElementById('diag-notes').value.trim(),
+              captured_at: new Date().toISOString()};
+    }
+
+    function savePracticeDiagnostic(selection, sign, image, status, response, transportError = null) {
+      if (!selection) return;
+      const record = {
+        attempt: practiceDiagnosticRecords.length + 1,
+        ...selection,
+        lesson_id: sign.lesson_id,
+        sign_name: sign.sign_name,
+        image,
+        http_status: status,
+        response,
+        // These are the exact rounded landmarks used by /api/analyze, when available.
+        landmarks: response && response.diagnostic_landmarks || null,
+        transport_error: transportError
+      };
+      practiceDiagnosticRecords.push(record);
+      renderPracticeDiagnostics();
+    }
+
+    function renderPracticeDiagnostics() {
+      document.getElementById('diag-count').textContent =
+        `${practiceDiagnosticRecords.length} records. Downloaded through record ${diagnosticDownloadedCount}. Download before closing this tab.`;
+      const list = document.getElementById('diag-recent');
+      list.replaceChildren();
+      for (const record of practiceDiagnosticRecords.slice(-10).reverse()) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:10px;align-items:center;margin:8px 0;';
+        const photo = document.createElement('img');
+        photo.src = record.image;
+        photo.alt = `Recorded pose ${record.attempt}`;
+        photo.style.cssText = 'width:90px;height:68px;object-fit:contain;';
+        const text = document.createElement('span');
+        const result = record.response;
+        let outcome = 'Unscorable / request error';
+        if (result && result.detected === false) outcome = 'No hand detected';
+        else if (result && result.scorable !== false && typeof result.passed === 'boolean') {
+          outcome = `${result.score} / ${result.passed ? 'Pass' : 'Reject'}`;
+        }
+        text.textContent = `#${record.attempt} · lesson ${record.sign_name} · ${record.hand} · actual: ${record.label} · ${record.notes} · ${outcome}`;
+        row.append(photo, text);
+        list.append(row);
+      }
+    }
+
+    function downloadPracticeDiagnostics() {
+      if (!practiceDiagnosticRecords.length) {
+        showToast('No test records to download.', 'info'); return;
+      }
+      const documentData = {
+        format: 'fyp-practice-diagnostics', version: 1,
+        session_started_at: diagnosticSessionId, exported_at: new Date().toISOString(),
+        scoring_source: '/api/analyze actual learning response; no experiment-page rescoring',
+        records: practiceDiagnosticRecords
+      };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(documentData, null, 2)], {type: 'application/json'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `practice-diagnostics-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+      document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      diagnosticDownloadedCount = practiceDiagnosticRecords.length;
+      renderPracticeDiagnostics();
+    }
+
+    function clearPracticeDiagnostics() {
+      if (!practiceDiagnosticRecords.length) return;
+      if (captureInProgress) { showToast('Wait for the current capture to finish.', 'info'); return; }
+      if (!window.confirm('Clear all test records? Download the JSON first if you need to keep them.')) return;
+      practiceDiagnosticRecords = [];
+      diagnosticDownloadedCount = 0;
+      renderPracticeDiagnostics();
+    }
+
+    window.addEventListener('beforeunload', event => {
+      if (practiceDiagnosticRecords.length > diagnosticDownloadedCount) {
+        event.preventDefault(); event.returnValue = '';
+      }
+    });
+
 
     async function doCapture() {
       if (captureInProgress) return;
@@ -2534,6 +2665,10 @@
 
       const capturedSign = currentSign;
       const capturedUser = currentUser;
+      let diagnostic;
+      try { diagnostic = diagnosticSelection(); }
+      catch (error) { showToast(error.message, 'error'); return; }
+      let diagnosticRecorded = false;
       document.getElementById('hand-status').textContent =
         '분석 중... / Analyzing...';
       showToast('분석 중... / Analyzing...', 'info');
@@ -2554,11 +2689,14 @@
           body: JSON.stringify({
             lesson_id: capturedSign.lesson_id,
             image: imageData,
-            method: 'original' // Server profile overrides this for configured lessons such as A.
+            method: 'original', // Server profile overrides this for configured lessons.
+            diagnostic: Boolean(diagnostic)
           })
         });
 
         const data = await res.json();
+        savePracticeDiagnostic(diagnostic, capturedSign, imageData, res.status, data);
+        diagnosticRecorded = Boolean(diagnostic);
 
         // Ignore feedback if the learner moved to another lesson while analysis was running.
         if (currentSign !== capturedSign || currentUser !== capturedUser) return;
@@ -2690,6 +2828,9 @@
 
       } catch (error) {
         console.error('Capture error:', error);
+        if (diagnostic && !diagnosticRecorded) {
+          savePracticeDiagnostic(diagnostic, capturedSign, imageData, null, null, error.message);
+        }
 
         document.getElementById('hand-status').textContent =
           '❌ 서버 오류 / Server Error';

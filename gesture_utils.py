@@ -109,6 +109,8 @@ def apply_shape_checks(points, comparison, settings):
     """Supplement bend scoring with per-lesson distance limits."""
     if settings.get('enabled') is not True:
         return comparison
+    if settings.get('version') == 3:
+        return _apply_bounded_shape_checks(points, comparison, settings)
     if settings.get('version') == 2:
         return _apply_lower_shape_checks(points, comparison, settings)
     if settings.get('version') != 1:
@@ -158,6 +160,40 @@ def _apply_lower_shape_checks(points, comparison, settings):
     result.update(angle_score=comparison['score'], shape_score=shape_score,
                   shape_features=features, shape_lower_limits=limits, shape_checks=checks,
                   shape_checks_version=2, shape_failed_features=failed)
+    result['score'] = min(comparison['score'], shape_score)
+    result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
+    return result
+
+
+def _apply_bounded_shape_checks(points, comparison, settings):
+    """Per-feature upper/lower distance checks for the number 4 development pilot."""
+    features = hand_shape_features(points)
+    upper = settings.get('upper_limits', {})
+    lower = settings.get('lower_limits', {})
+    if not isinstance(upper, dict) or not isinstance(lower, dict) or not (upper or lower):
+        raise LandmarkError('At least one shape limit is required.')
+    for limits in (upper, lower):
+        if any(key not in features or isinstance(value, bool)
+               or not isinstance(value, (int, float)) or not math.isfinite(value)
+               or value <= 0 for key, value in limits.items()):
+            raise LandmarkError('Shape limits must name valid features and positive finite values.')
+    if any(lower[key] > upper[key] for key in lower.keys() & upper.keys()):
+        raise LandmarkError('A lower shape limit cannot exceed its upper limit.')
+    ratios = [features[key] / value for key, value in upper.items()]
+    ratios += [value / max(features[key], 1e-12) for key, value in lower.items()]
+    checks = {key: (key not in lower or features[key] >= lower[key])
+              and (key not in upper or features[key] <= upper[key])
+              for key in sorted(upper.keys() | lower.keys())}
+    threshold = comparison['threshold']
+    shape_score = math.floor(max(0, 100 - (100 - threshold) * max(ratios)))
+    failed = [key for key, passed in checks.items() if not passed]
+    if failed:
+        shape_score = min(shape_score, max(0, math.ceil(threshold) - 1))
+    result = dict(comparison)
+    result.update(angle_score=comparison['score'], shape_score=shape_score,
+                  shape_features=features, shape_upper_limits=upper,
+                  shape_lower_limits=lower, shape_checks=checks,
+                  shape_checks_version=3, shape_failed_features=failed)
     result['score'] = min(comparison['score'], shape_score)
     result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
     return result

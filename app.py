@@ -684,13 +684,17 @@ def analyze_gesture():
             comparison = compare_lesson(user_landmarks, ref_data, lesson_id, row[1], data)
         except LandmarkError as error:
             return jsonify({'detected': True, 'scorable': False, 'score': None,
-                            'passed': False, 'message': str(error)}), 422
+                            'passed': False, 'message': str(error),
+                            **({'diagnostic_landmarks': user_landmarks}
+                               if data.get('diagnostic') is True else {})}), 422
         score = comparison['score']
 
         return app.response_class(
             response=json.dumps({
                 'detected': True,
                 **comparison,
+                **({'diagnostic_landmarks': user_landmarks}
+                   if data.get('diagnostic') is True else {}),
                 'scorable': True,
                 'message': '정답! / Correct!' if comparison['passed'] else '다시 시도 / Try Again'
             }, ensure_ascii=False),

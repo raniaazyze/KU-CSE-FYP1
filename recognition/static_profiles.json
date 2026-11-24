@@ -195,6 +195,52 @@
         "construction": "Minimum thumb-tip (4) to little-finger MCP (17) distance across five right-hand references, divided by wrist (0) to middle MCP (9) distance, minus a provisional 0.15 palm-length margin.",
         "validation_scope": "Development replay of the same 40 tests used to inspect the error. Freeze this rule before collecting fresh test inputs."
       }
+    },
+    "9": {
+      "enabled": true,
+      "sign_name": "4",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          134.59928863530723,
+          139.75508535048667,
+          175.8632359694621,
+          175.7025430817676,
+          175.88376473397452,
+          175.23324673519053,
+          174.02211037145207,
+          175.6047437641975,
+          177.3044416344467,
+          172.7770689673727
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-9-4_experiment(1).json (five right-hand reference captures)",
+      "evaluation_scope": "Number 4 development pilot: averaged bend angles, maximum thumb separation and minimum middle-ring fingertip gap. Fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 3,
+        "upper_limits": {
+          "thumb_to_little_base": 0.3928517828330675
+        },
+        "lower_limits": {
+          "middle_ring_gap": 0.25401664834539356
+        },
+        "reference_extrema": {
+          "thumb_to_little_base_max": 0.2428517828330675,
+          "middle_ring_gap_min": 0.30401664834539355
+        },
+        "additive_margins": {
+          "thumb_to_little_base_upper": 0.15,
+          "middle_ring_gap_lower": 0.05
+        },
+        "construction": "Five right-hand references: thumb tip (4) to little MCP (17) maximum + 0.15; middle (12) to ring (16) fingertip distance minimum - 0.05. Distances divided by wrist (0) to middle MCP (9). Provisional margins.",
+        "validation_scope": "Features selected after inspecting the 40 number 4 tests; saved-input replay is development evidence, not fresh validation."
+      }
     }
   }
 }
