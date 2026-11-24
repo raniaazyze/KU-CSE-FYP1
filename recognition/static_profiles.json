@@ -241,6 +241,47 @@
         "construction": "Five right-hand references: thumb tip (4) to little MCP (17) maximum + 0.15; middle (12) to ring (16) fingertip distance minimum - 0.05. Distances divided by wrist (0) to middle MCP (9). Provisional margins.",
         "validation_scope": "Features selected after inspecting the 40 number 4 tests; saved-input replay is development evidence, not fresh validation."
       }
+    },
+    "10": {
+      "enabled": true,
+      "sign_name": "5",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          177.75678616394654,
+          154.54289730735385,
+          175.7146164282495,
+          175.8870509651985,
+          175.30554458176184,
+          176.23764454144904,
+          174.62543777282536,
+          176.30466744551163,
+          178.43455525034656,
+          170.10145506744544
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-10-5_experiment-2.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 5 development pilot: averaged bend angles plus minimum thumb separation. Replayed 44 inspected inputs; fresh actual-app evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 2,
+        "lower_limits": {
+          "thumb_to_little_base": 0.8594372419912074
+        },
+        "reference_minima": {
+          "thumb_to_little_base": 1.0094372419912074
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15
+        },
+        "construction": "Minimum thumb tip (4) to little MCP (17) distance across five references, divided by wrist (0) to middle MCP (9) distance, minus provisional margin 0.15.",
+        "validation_scope": "Feature chosen after inspecting 44 inputs. Development replay only; correct left-hand inputs approach the limit. Freeze before fresh evaluation."
+      }
     }
   }
 }

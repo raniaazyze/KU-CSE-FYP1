@@ -1,0 +1,193 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "5"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "5",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "hold up your dominant hand with all four fingers and your thumb extended and spread wide. / 주로 사용하는 손을 네 손가락을 모두 펴고 엄지를 쭉 뻗어 넓게 펼치세요",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "5",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3876,
+        "y": 0.6892,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.4501,
+        "y": 0.6722,
+        "z": -0.0364
+      },
+      {
+        "id": 2,
+        "x": 0.5006,
+        "y": 0.6216,
+        "z": -0.0519
+      },
+      {
+        "id": 3,
+        "x": 0.5469,
+        "y": 0.5851,
+        "z": -0.0634
+      },
+      {
+        "id": 4,
+        "x": 0.5897,
+        "y": 0.5712,
+        "z": -0.0746
+      },
+      {
+        "id": 5,
+        "x": 0.4717,
+        "y": 0.4929,
+        "z": -0.028
+      },
+      {
+        "id": 6,
+        "x": 0.5013,
+        "y": 0.4196,
+        "z": -0.0449
+      },
+      {
+        "id": 7,
+        "x": 0.5197,
+        "y": 0.3694,
+        "z": -0.0604
+      },
+      {
+        "id": 8,
+        "x": 0.5318,
+        "y": 0.3269,
+        "z": -0.0726
+      },
+      {
+        "id": 9,
+        "x": 0.4323,
+        "y": 0.4714,
+        "z": -0.0257
+      },
+      {
+        "id": 10,
+        "x": 0.4505,
+        "y": 0.383,
+        "z": -0.0394
+      },
+      {
+        "id": 11,
+        "x": 0.46,
+        "y": 0.3223,
+        "z": -0.0542
+      },
+      {
+        "id": 12,
+        "x": 0.4649,
+        "y": 0.2718,
+        "z": -0.0651
+      },
+      {
+        "id": 13,
+        "x": 0.3911,
+        "y": 0.4754,
+        "z": -0.028
+      },
+      {
+        "id": 14,
+        "x": 0.3943,
+        "y": 0.3904,
+        "z": -0.0464
+      },
+      {
+        "id": 15,
+        "x": 0.3943,
+        "y": 0.333,
+        "z": -0.0653
+      },
+      {
+        "id": 16,
+        "x": 0.3938,
+        "y": 0.2825,
+        "z": -0.078
+      },
+      {
+        "id": 17,
+        "x": 0.3505,
+        "y": 0.5011,
+        "z": -0.0335
+      },
+      {
+        "id": 18,
+        "x": 0.3278,
+        "y": 0.446,
+        "z": -0.0548
+      },
+      {
+        "id": 19,
+        "x": 0.3114,
+        "y": 0.4083,
+        "z": -0.0684
+      },
+      {
+        "id": 20,
+        "x": 0.3007,
+        "y": 0.3677,
+        "z": -0.0766
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "5",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        177.75678616394654,
+        154.54289730735385,
+        175.7146164282495,
+        175.8870509651985,
+        175.30554458176184,
+        176.23764454144904,
+        174.62543777282536,
+        176.30466744551163,
+        178.43455525034656,
+        170.10145506744544
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-10-5_experiment-2.json (five right-hand reference captures)",
+    "evaluation_scope": "Number 5 development pilot: averaged bend angles plus minimum thumb separation. Replayed 44 inspected inputs; fresh actual-app evaluation pending.",
+    "shape_checks": {
+      "enabled": true,
+      "version": 2,
+      "lower_limits": {
+        "thumb_to_little_base": 0.8594372419912074
+      },
+      "reference_minima": {
+        "thumb_to_little_base": 1.0094372419912074
+      },
+      "additive_margins": {
+        "thumb_to_little_base": 0.15
+      },
+      "construction": "Minimum thumb tip (4) to little MCP (17) distance across five references, divided by wrist (0) to middle MCP (9) distance, minus provisional margin 0.15.",
+      "validation_scope": "Feature chosen after inspecting 44 inputs. Development replay only; correct left-hand inputs approach the limit. Freeze before fresh evaluation."
+    }
+  },
+  "assets": []
+}
