@@ -154,6 +154,47 @@
       "capture_count": 5,
       "source": "lesson-7-2_experiment_corrected.json (five right-hand reference captures)",
       "evaluation_scope": "Number 2 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+    },
+    "8": {
+      "enabled": true,
+      "sign_name": "3",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          178.4205146001519,
+          155.00878451451982,
+          173.63953298516506,
+          176.21978058249414,
+          173.02966609246235,
+          178.10291731835363,
+          70.07183107193589,
+          149.64625620048224,
+          67.29911168665677,
+          164.6705625881491
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-8-3_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 3 development pilot: averaged bend angles plus minimum thumb separation; saved tests inspected during development, fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 2,
+        "lower_limits": {
+          "thumb_to_little_base": 0.7180750151540461
+        },
+        "reference_minima": {
+          "thumb_to_little_base": 0.8680750151540462
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15
+        },
+        "construction": "Minimum thumb-tip (4) to little-finger MCP (17) distance across five right-hand references, divided by wrist (0) to middle MCP (9) distance, minus a provisional 0.15 palm-length margin.",
+        "validation_scope": "Development replay of the same 40 tests used to inspect the error. Freeze this rule before collecting fresh test inputs."
+      }
     }
   }
 }

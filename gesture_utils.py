@@ -106,9 +106,11 @@ def hand_shape_features(points):
 
 
 def apply_shape_checks(points, comparison, settings):
-    """Supplement bend scoring with reference-based distance limits for the B pilot."""
+    """Supplement bend scoring with per-lesson distance limits."""
     if settings.get('enabled') is not True:
         return comparison
+    if settings.get('version') == 2:
+        return _apply_lower_shape_checks(points, comparison, settings)
     if settings.get('version') != 1:
         raise LandmarkError('Unsupported shape-check version.')
     limits = settings.get('upper_limits')
@@ -131,6 +133,31 @@ def apply_shape_checks(points, comparison, settings):
     result.update(angle_score=comparison['score'], shape_score=shape_score,
                   shape_features=features, shape_limits=limits, shape_checks=checks,
                   shape_checks_version=1, shape_failed_features=failed)
+    result['score'] = min(comparison['score'], shape_score)
+    result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
+    return result
+
+
+def _apply_lower_shape_checks(points, comparison, settings):
+    """Require thumb separation for the number 3 pilot; preserve version 1 B scoring."""
+    limits = settings.get('lower_limits')
+    if (not isinstance(limits, dict) or set(limits) != {'thumb_to_little_base'}
+            or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                   or not math.isfinite(v) or v <= 0 for v in limits.values())):
+        raise LandmarkError('Thumb lower limits must be positive finite numbers.')
+    features = hand_shape_features(points)
+    checks = {key: features[key] >= limit for key, limit in limits.items()}
+    # Inverse ratio: too little thumb separation lowers the supplementary score.
+    ratio = max(limit / max(features[key], 1e-12) for key, limit in limits.items())
+    threshold = comparison['threshold']
+    shape_score = math.floor(max(0, 100 - (100 - threshold) * ratio))
+    failed = [key for key, passed in checks.items() if not passed]
+    if failed:
+        shape_score = min(shape_score, max(0, math.ceil(threshold) - 1))
+    result = dict(comparison)
+    result.update(angle_score=comparison['score'], shape_score=shape_score,
+                  shape_features=features, shape_lower_limits=limits, shape_checks=checks,
+                  shape_checks_version=2, shape_failed_features=failed)
     result['score'] = min(comparison['score'], shape_score)
     result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
     return result

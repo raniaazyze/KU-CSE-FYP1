@@ -259,12 +259,19 @@ def get_categories():
     cur.close()
     return jsonify([{'category_id': r[0], 'name': r[1], 'description': r[2]} for r in rows])
 
+
 @app.route('/api/lessons/<int:category_id>', methods=['GET'])
 def get_lessons(category_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM LESSONS WHERE category_id = %s", (category_id,))
     rows = cur.fetchall()
     cur.close()
+
+    # Order numeric lessons by their names, without changing lesson IDs.
+    if rows and all(str(row[2]).strip().isascii()
+                    and str(row[2]).strip().isdecimal() for row in rows):
+        rows = sorted(rows, key=lambda row: (int(str(row[2]).strip()), row[0]))
+
     return app.response_class(
         response=json.dumps([{
             'lesson_id': r[0],
