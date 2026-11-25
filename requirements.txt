@@ -6,7 +6,7 @@ bcrypt
 gunicorn==23.0.0
 
 mediapipe==0.10.21
-opencv-contrib-python
+opencv-contrib-python==4.11.0.86
 numpy<2
 
 matplotlib==3.10.7
