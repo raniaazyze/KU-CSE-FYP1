@@ -109,6 +109,8 @@ def apply_shape_checks(points, comparison, settings):
     """Supplement bend scoring with per-lesson distance limits."""
     if settings.get('enabled') is not True:
         return comparison
+    if settings.get('version') == 4:
+        return _apply_thumb_pinky_contact_check(points, comparison, settings)
     if settings.get('version') == 3:
         return _apply_bounded_shape_checks(points, comparison, settings)
     if settings.get('version') == 2:
@@ -196,4 +198,35 @@ def _apply_bounded_shape_checks(points, comparison, settings):
                   shape_checks_version=3, shape_failed_features=failed)
     result['score'] = min(comparison['score'], shape_score)
     result['passed'] = comparison['passed'] and not failed and result['score'] >= threshold
+    return result
+
+
+def _apply_thumb_pinky_contact_check(points, comparison, settings):
+    """Number 6 pilot: a small tip gap is evidence of proximity, not proof of contact."""
+    limits = settings.get('upper_limits')
+    if not isinstance(limits, dict) or set(limits) != {'thumb_little_tip_gap'}:
+        raise LandmarkError('Expected a thumb_little_tip_gap upper limit.')
+    limit = limits['thumb_little_tip_gap']
+    if (isinstance(limit, bool) or not isinstance(limit, (int, float))
+            or not math.isfinite(limit) or limit <= 0):
+        raise LandmarkError('Contact limit must be a positive finite number.')
+    values = validate(points)
+    def distance(a, b):
+        return math.sqrt(sum((values[a][k] - values[b][k]) ** 2 for k in range(3)))
+    palm = distance(0, 9)
+    if palm < 1e-6:
+        raise LandmarkError('Palm measurement is too small. Show your whole hand and recapture.')
+    gap = distance(4, 20) / palm
+    passed = gap <= limit
+    threshold = comparison['threshold']
+    shape_score = math.floor(max(0, 100 - (100 - threshold) * gap / limit))
+    if not passed:
+        shape_score = min(shape_score, max(0, math.ceil(threshold) - 1))
+    result = dict(comparison)
+    result.update(angle_score=comparison['score'], shape_score=shape_score,
+                  shape_features={'thumb_little_tip_gap': gap}, shape_upper_limits=limits,
+                  shape_checks={'thumb_little_tip_gap': passed}, shape_checks_version=4,
+                  shape_failed_features=[] if passed else ['thumb_little_tip_gap'])
+    result['score'] = min(comparison['score'], shape_score)
+    result['passed'] = comparison['passed'] and passed and result['score'] >= threshold
     return result

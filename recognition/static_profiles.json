@@ -282,6 +282,47 @@
         "construction": "Minimum thumb tip (4) to little MCP (17) distance across five references, divided by wrist (0) to middle MCP (9) distance, minus provisional margin 0.15.",
         "validation_scope": "Feature chosen after inspecting 44 inputs. Development replay only; correct left-hand inputs approach the limit. Freeze before fresh evaluation."
       }
+    },
+    "11": {
+      "enabled": true,
+      "sign_name": "6",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          143.2693326672205,
+          172.9389431710916,
+          177.89447624532298,
+          176.85191146018326,
+          174.16865512468317,
+          177.13094821716484,
+          175.97829232557916,
+          174.1495999153372,
+          135.90647375782333,
+          166.5605481297757
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-11-6_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 6 development pilot: averaged bend angles plus thumb-pinky tip proximity. Saved-input replay: 7/10 correct accepted per hand; 0/10 incorrect accepted per hand. Correct-pose rejection remains; fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 4,
+        "upper_limits": {
+          "thumb_little_tip_gap": 0.3540685231911609
+        },
+        "reference_maxima": {
+          "thumb_little_tip_gap": 0.20406852319116092
+        },
+        "additive_margins": {
+          "thumb_little_tip_gap": 0.15
+        },
+        "construction": "Maximum thumb-tip (4) to little-finger-tip (20) distance across five references divided by wrist (0) to middle MCP (9) distance, plus provisional 0.15 margin. Image-space proximity does not prove physical contact.",
+        "validation_scope": "Feature selected after inspecting these 40 inputs. Six correct poses still fail angle scoring. No 7/8/9 negatives in this dataset; fresh validation required."
+      }
     }
   }
 }
