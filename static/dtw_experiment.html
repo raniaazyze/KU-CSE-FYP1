@@ -48,7 +48,7 @@ body{font:16px/1.55 system-ui,sans-serif;background:#f4f7fa;color:#182b3a;margin
 <script>
 'use strict';
 const STORAGE_KEY = 'dtw-experiment-v1';
-const RECORD_MS = 2000, FRAME_INTERVAL_MS = 150;
+const RECORD_MS = 2000, FRAME_INTERVAL_MS = 150, LEAD_IN_MS = 1200;
 const $ = id => document.getElementById(id);
 let state = freshState();
 let stream = null;
@@ -89,12 +89,18 @@ async function recordSequence(buttonEl) {
   if (!stream||!video.videoWidth||video.readyState<2) throw new Error('Wait for the live camera image before recording.');
   const frames=[];
   let previewImage=null;
+  let noHandCount=0, errorCount=0, lastError='';
   buttonEl.classList.add('recording'); const originalText=buttonEl.textContent;
   try {
+    // Lead-in so there's time to get your hand up after clicking, before frames are counted.
+    for (let s=LEAD_IN_MS; s>0; s-=100) {
+      buttonEl.textContent=`Get ready… ${Math.ceil(s/1000)}s`;
+      await new Promise(r=>setTimeout(r,100));
+    }
     const start=performance.now();
     let elapsed=0;
     while (elapsed < RECORD_MS) {
-      buttonEl.textContent=`Recording… ${Math.ceil((RECORD_MS-elapsed)/1000)}s`;
+      buttonEl.textContent=`Recording… ${Math.ceil((RECORD_MS-elapsed)/1000)}s (${frames.length} frames)`;
       const canvas=document.createElement('canvas');
       canvas.width=video.videoWidth; canvas.height=video.videoHeight;
       canvas.getContext('2d').drawImage(video,0,0);
@@ -103,14 +109,19 @@ async function recordSequence(buttonEl) {
       try {
         const data=await api('/extract-landmarks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image})});
         if (data.detected) {validateLandmarks(data.landmarks); frames.push(data.landmarks);}
-      } catch { /* a single missed frame shouldn't abort the whole recording */ }
+        else noHandCount++;
+      } catch(e) { errorCount++; lastError=e.message; console.warn('extract-landmarks failed for one frame:', e); }
       await new Promise(r=>setTimeout(r,FRAME_INTERVAL_MS));
       elapsed=performance.now()-start;
     }
   } finally {
     buttonEl.classList.remove('recording'); buttonEl.textContent=originalText;
   }
-  if (frames.length < 3) throw new Error(`Only captured ${frames.length} usable frame(s) with a hand detected. Keep your hand in view the whole time and try again.`);
+  if (frames.length < 3) {
+    const detail = errorCount>0 ? `${errorCount} request(s) failed (e.g. "${lastError}") -- check the Flask terminal and the browser console (F12).`
+      : `${noHandCount} frame(s) had no hand detected -- make sure your whole hand is in view and well lit.`;
+    throw new Error(`Only captured ${frames.length} usable frame(s). ${detail}`);
+  }
   return {captured_at:new Date().toISOString(), image:previewImage, landmarks:frames};
 }
 async function scoreAll() {
