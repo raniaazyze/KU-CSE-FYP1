@@ -1,0 +1,411 @@
+{
+  "schema_version": 1,
+  "lessons": {
+    "1": {
+      "enabled": true,
+      "sign_name": "A",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          156.17893495721881,
+          169.21190730649687,
+          30.02048679542321,
+          143.15462134313037,
+          32.752861379875824,
+          71.83278025375925,
+          31.139623905034842,
+          91.85362658503911,
+          46.568959032532796,
+          99.14113869936673
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "Five reference captures from A_reference_experiment_nov10_67attempts.json",
+      "evaluation_scope": "Right-hand A pilot; left-hand performance remains limited."
+    },
+    "2": {
+      "enabled": true,
+      "sign_name": "B",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          148.29285956723885,
+          131.80363924722366,
+          170.99825589908568,
+          177.29907784515177,
+          171.22944686675422,
+          176.9444098937963,
+          172.06002029753625,
+          176.35550097558823,
+          177.01422646632204,
+          177.49700344947493
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-2-B_experiment.json (five reference captures)",
+      "evaluation_scope": "B experimental pilot: bend angles plus thumb-position and fingertip-spacing limits. Fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 1,
+        "upper_limits": {
+          "thumb_to_little_base": 0.5449552147057785,
+          "index_middle_gap": 0.28304301110571306,
+          "middle_ring_gap": 0.2921154417505085,
+          "ring_little_gap": 0.4467392959736124
+        },
+        "reference_maxima": {
+          "thumb_to_little_base": 0.39495521470577843,
+          "index_middle_gap": 0.18304301110571308,
+          "middle_ring_gap": 0.19211544175050851,
+          "ring_little_gap": 0.3467392959736124
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15,
+          "index_middle_gap": 0.1,
+          "middle_ring_gap": 0.1,
+          "ring_little_gap": 0.1
+        },
+        "construction": "Maximum feature value across the five right-hand B references plus a provisional margin, in palm-length units.",
+        "validation_scope": "Development comparison on the existing 40 B tests; fresh-data evaluation is required. These tests have been inspected during development."
+      }
+    },
+    "3": {
+      "enabled": true,
+      "sign_name": "1",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          152.75016128135007,
+          154.4565193716853,
+          178.70664533709098,
+          175.2565330705536,
+          44.49737611926416,
+          167.03876645664158,
+          40.43026803790356,
+          165.09240690617878,
+          57.14263287322678,
+          164.7841622642275
+        ],
+        "reference_method": "single_capture_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 1,
+      "source": "lesson-3-1_experiment.json (reference capture 1, selected by capture order)",
+      "evaluation_scope": "Number 1 single-reference pilot: 9/10 correct right and 10/10 correct left accepted; 0/10 incorrect accepted per hand in saved evaluation."
+    },
+    "6": {
+      "enabled": true,
+      "sign_name": "0",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          161.85228314241823,
+          150.5453212080718,
+          113.77226563608667,
+          133.76290918731505,
+          95.89463099733238,
+          139.1539481840495,
+          92.8264678874428,
+          140.4165767858621,
+          112.7618863146052,
+          139.66514911421058
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-6-0_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 0 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+    },
+    "7": {
+      "enabled": true,
+      "sign_name": "2",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          149.04403793891942,
+          164.6711099196187,
+          175.51351479551425,
+          177.28826674537217,
+          173.63837383168524,
+          175.13077264923575,
+          60.19015110144936,
+          157.02469316130765,
+          66.78114535697748,
+          159.89556973318253
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-7-2_experiment_corrected.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 2 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs; broader validation pending."
+    },
+    "8": {
+      "enabled": true,
+      "sign_name": "3",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          178.4205146001519,
+          155.00878451451982,
+          173.63953298516506,
+          176.21978058249414,
+          173.02966609246235,
+          178.10291731835363,
+          70.07183107193589,
+          149.64625620048224,
+          67.29911168665677,
+          164.6705625881491
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-8-3_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 3 development pilot: averaged bend angles plus minimum thumb separation; saved tests inspected during development, fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 2,
+        "lower_limits": {
+          "thumb_to_little_base": 0.7180750151540461
+        },
+        "reference_minima": {
+          "thumb_to_little_base": 0.8680750151540462
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15
+        },
+        "construction": "Minimum thumb-tip (4) to little-finger MCP (17) distance across five right-hand references, divided by wrist (0) to middle MCP (9) distance, minus a provisional 0.15 palm-length margin.",
+        "validation_scope": "Development replay of the same 40 tests used to inspect the error. Freeze this rule before collecting fresh test inputs."
+      }
+    },
+    "9": {
+      "enabled": true,
+      "sign_name": "4",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          134.59928863530723,
+          139.75508535048667,
+          175.8632359694621,
+          175.7025430817676,
+          175.88376473397452,
+          175.23324673519053,
+          174.02211037145207,
+          175.6047437641975,
+          177.3044416344467,
+          172.7770689673727
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-9-4_experiment(1).json (five right-hand reference captures)",
+      "evaluation_scope": "Number 4 development pilot: averaged bend angles, maximum thumb separation and minimum middle-ring fingertip gap. Fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 3,
+        "upper_limits": {
+          "thumb_to_little_base": 0.3928517828330675
+        },
+        "lower_limits": {
+          "middle_ring_gap": 0.25401664834539356
+        },
+        "reference_extrema": {
+          "thumb_to_little_base_max": 0.2428517828330675,
+          "middle_ring_gap_min": 0.30401664834539355
+        },
+        "additive_margins": {
+          "thumb_to_little_base_upper": 0.15,
+          "middle_ring_gap_lower": 0.05
+        },
+        "construction": "Five right-hand references: thumb tip (4) to little MCP (17) maximum + 0.15; middle (12) to ring (16) fingertip distance minimum - 0.05. Distances divided by wrist (0) to middle MCP (9). Provisional margins.",
+        "validation_scope": "Features selected after inspecting the 40 number 4 tests; saved-input replay is development evidence, not fresh validation."
+      }
+    },
+    "10": {
+      "enabled": true,
+      "sign_name": "5",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          177.75678616394654,
+          154.54289730735385,
+          175.7146164282495,
+          175.8870509651985,
+          175.30554458176184,
+          176.23764454144904,
+          174.62543777282536,
+          176.30466744551163,
+          178.43455525034656,
+          170.10145506744544
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-10-5_experiment-2.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 5 development pilot: averaged bend angles plus minimum thumb separation. Replayed 44 inspected inputs; fresh actual-app evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 2,
+        "lower_limits": {
+          "thumb_to_little_base": 0.8594372419912074
+        },
+        "reference_minima": {
+          "thumb_to_little_base": 1.0094372419912074
+        },
+        "additive_margins": {
+          "thumb_to_little_base": 0.15
+        },
+        "construction": "Minimum thumb tip (4) to little MCP (17) distance across five references, divided by wrist (0) to middle MCP (9) distance, minus provisional margin 0.15.",
+        "validation_scope": "Feature chosen after inspecting 44 inputs. Development replay only; correct left-hand inputs approach the limit. Freeze before fresh evaluation."
+      }
+    },
+    "11": {
+      "enabled": true,
+      "sign_name": "6",
+      "method": "angles",
+      "slope": 1,
+      "threshold": 70,
+      "reference": {
+        "angles": [
+          143.2693326672205,
+          172.9389431710916,
+          177.89447624532298,
+          176.85191146018326,
+          174.16865512468317,
+          177.13094821716484,
+          175.97829232557916,
+          174.1495999153372,
+          135.90647375782333,
+          166.5605481297757
+        ],
+        "reference_method": "mean_joint_angles"
+      },
+      "reference_hand": "right",
+      "capture_count": 5,
+      "source": "lesson-11-6_experiment.json (five right-hand reference captures)",
+      "evaluation_scope": "Number 6 development pilot: averaged bend angles plus thumb-pinky tip proximity. Saved-input replay: 7/10 correct accepted per hand; 0/10 incorrect accepted per hand. Correct-pose rejection remains; fresh-data evaluation pending.",
+      "shape_checks": {
+        "enabled": true,
+        "version": 4,
+        "upper_limits": {
+          "thumb_little_tip_gap": 0.3540685231911609
+        },
+        "reference_maxima": {
+          "thumb_little_tip_gap": 0.20406852319116092
+        },
+        "additive_margins": {
+          "thumb_little_tip_gap": 0.15
+        },
+        "construction": "Maximum thumb-tip (4) to little-finger-tip (20) distance across five references divided by wrist (0) to middle MCP (9) distance, plus provisional 0.15 margin. Image-space proximity does not prove physical contact.",
+        "validation_scope": "Feature selected after inspecting these 40 inputs. Six correct poses still fail angle scoring. No 7/8/9 negatives in this dataset; fresh validation required."
+      }
+    },
+    "12": {
+  "enabled": true,
+  "sign_name": "7",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      156.4451189244938,
+      165.4870789192776,
+      174.64340622288518,
+      175.69143299393528,
+      170.8107554487623,
+      177.89869968873523,
+      79.31694757767414,
+      146.3012746353786,
+      173.2330584203897,
+      175.4524215451924
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-12-7_experiment.json",
+  "evaluation_scope": "Number 7 development candidate. Saved-input replay: correct right 10/10, correct left 9/10; incorrect accepted 0/10 per hand. Settings selected using these inputs; fresh evaluation pending.",
+  "number_7_checks": {
+    "enabled": true,
+    "ring_weight": 0.5,
+    "thumb_ring_gap_limit": 0.55
+  }
+},
+"13": {
+  "enabled": true,
+  "sign_name": "8",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      156.72205859847983,
+      143.0036365180353,
+      176.11374492319513,
+      174.07552074912013,
+      46.86814044350013,
+      149.9765563325763,
+      171.06706066412778,
+      174.75013087767198,
+      174.839555243473,
+      178.064536362643
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-13-8_experiment.json",
+  "evaluation_scope": "Number 8 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
+},
+"14": {
+  "enabled": true,
+  "sign_name": "9",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      174.51555852451813,
+      122.31164573746187,
+      91.41471524872786,
+      142.52994460794733,
+      176.1700590202795,
+      174.30709119563866,
+      174.82057522859287,
+      175.80516405002635,
+      176.61423993347086,
+      171.93298652999619
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-14-9_experiment.json",
+  "evaluation_scope": "Number 9 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
+}
+  }
+}

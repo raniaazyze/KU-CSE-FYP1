@@ -1,0 +1,193 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "6"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "6",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "hold up your dominant hand with your palm facing outward and touch the tip of your thumb to the tip of your pinky finger while keeping your index, middle, and ring fingers extended upward. / 주로 사용하는 손을 손바닥이 바깥쪽을 향하게 들고, 검지, 중지, 약지를 위로 펴 둔 상태에서 엄지 끝을 손가락 끝에 닿게 하세요",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "6",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3682,
+        "y": 0.7525,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.406,
+        "y": 0.7328,
+        "z": -0.0556
+      },
+      {
+        "id": 2,
+        "x": 0.4131,
+        "y": 0.6626,
+        "z": -0.0747
+      },
+      {
+        "id": 3,
+        "x": 0.3851,
+        "y": 0.5905,
+        "z": -0.0834
+      },
+      {
+        "id": 4,
+        "x": 0.3574,
+        "y": 0.5262,
+        "z": -0.0905
+      },
+      {
+        "id": 5,
+        "x": 0.4442,
+        "y": 0.5399,
+        "z": -0.0402
+      },
+      {
+        "id": 6,
+        "x": 0.4662,
+        "y": 0.4508,
+        "z": -0.0582
+      },
+      {
+        "id": 7,
+        "x": 0.4791,
+        "y": 0.3974,
+        "z": -0.0741
+      },
+      {
+        "id": 8,
+        "x": 0.4892,
+        "y": 0.3466,
+        "z": -0.0874
+      },
+      {
+        "id": 9,
+        "x": 0.4053,
+        "y": 0.526,
+        "z": -0.0272
+      },
+      {
+        "id": 10,
+        "x": 0.4121,
+        "y": 0.4313,
+        "z": -0.0464
+      },
+      {
+        "id": 11,
+        "x": 0.414,
+        "y": 0.3708,
+        "z": -0.0672
+      },
+      {
+        "id": 12,
+        "x": 0.4155,
+        "y": 0.3156,
+        "z": -0.0806
+      },
+      {
+        "id": 13,
+        "x": 0.3697,
+        "y": 0.5428,
+        "z": -0.0195
+      },
+      {
+        "id": 14,
+        "x": 0.3527,
+        "y": 0.4513,
+        "z": -0.055
+      },
+      {
+        "id": 15,
+        "x": 0.3383,
+        "y": 0.3916,
+        "z": -0.0857
+      },
+      {
+        "id": 16,
+        "x": 0.3274,
+        "y": 0.3365,
+        "z": -0.1035
+      },
+      {
+        "id": 17,
+        "x": 0.343,
+        "y": 0.5796,
+        "z": -0.0144
+      },
+      {
+        "id": 18,
+        "x": 0.3412,
+        "y": 0.5347,
+        "z": -0.0585
+      },
+      {
+        "id": 19,
+        "x": 0.3497,
+        "y": 0.5558,
+        "z": -0.0783
+      },
+      {
+        "id": 20,
+        "x": 0.3573,
+        "y": 0.5725,
+        "z": -0.087
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "6",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        143.2693326672205,
+        172.9389431710916,
+        177.89447624532298,
+        176.85191146018326,
+        174.16865512468317,
+        177.13094821716484,
+        175.97829232557916,
+        174.1495999153372,
+        135.90647375782333,
+        166.5605481297757
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-11-6_experiment.json (five right-hand reference captures)",
+    "evaluation_scope": "Number 6 development pilot: averaged bend angles plus thumb-pinky tip proximity. Saved-input replay: 7/10 correct accepted per hand; 0/10 incorrect accepted per hand. Correct-pose rejection remains; fresh-data evaluation pending.",
+    "shape_checks": {
+      "enabled": true,
+      "version": 4,
+      "upper_limits": {
+        "thumb_little_tip_gap": 0.3540685231911609
+      },
+      "reference_maxima": {
+        "thumb_little_tip_gap": 0.20406852319116092
+      },
+      "additive_margins": {
+        "thumb_little_tip_gap": 0.15
+      },
+      "construction": "Maximum thumb-tip (4) to little-finger-tip (20) distance across five references divided by wrist (0) to middle MCP (9) distance, plus provisional 0.15 margin. Image-space proximity does not prove physical contact.",
+      "validation_scope": "Feature selected after inspecting these 40 inputs. Six correct poses still fail angle scoring. No 7/8/9 negatives in this dataset; fresh validation required."
+    }
+  },
+  "assets": []
+}

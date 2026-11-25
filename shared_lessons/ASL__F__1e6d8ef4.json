@@ -1,0 +1,192 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "지문자",
+    "sign_name": "F"
+  },
+  "category_description": "Basic Fingerspelling",
+  "lesson": {
+    "sign_name": "F",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "touch the tip of your index finger to the tip of your thumb to form a circle while holding your middle, ring, and pinky fingers straight up and spread apart, with your palm facing outward",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "F",
+    "category": "지문자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.6041,
+        "y": 0.8044,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.5483,
+        "y": 0.7774,
+        "z": -0.0074
+      },
+      {
+        "id": 2,
+        "x": 0.5038,
+        "y": 0.7143,
+        "z": -0.0161
+      },
+      {
+        "id": 3,
+        "x": 0.4778,
+        "y": 0.6634,
+        "z": -0.0286
+      },
+      {
+        "id": 4,
+        "x": 0.4819,
+        "y": 0.6229,
+        "z": -0.0397
+      },
+      {
+        "id": 5,
+        "x": 0.5335,
+        "y": 0.594,
+        "z": 0.0062
+      },
+      {
+        "id": 6,
+        "x": 0.5028,
+        "y": 0.5379,
+        "z": -0.028
+      },
+      {
+        "id": 7,
+        "x": 0.4884,
+        "y": 0.5482,
+        "z": -0.057
+      },
+      {
+        "id": 8,
+        "x": 0.4886,
+        "y": 0.5729,
+        "z": -0.0709
+      },
+      {
+        "id": 9,
+        "x": 0.5657,
+        "y": 0.5717,
+        "z": -0.0053
+      },
+      {
+        "id": 10,
+        "x": 0.5496,
+        "y": 0.4714,
+        "z": -0.024
+      },
+      {
+        "id": 11,
+        "x": 0.5416,
+        "y": 0.4099,
+        "z": -0.0374
+      },
+      {
+        "id": 12,
+        "x": 0.5386,
+        "y": 0.3598,
+        "z": -0.0448
+      },
+      {
+        "id": 13,
+        "x": 0.6026,
+        "y": 0.5739,
+        "z": -0.0225
+      },
+      {
+        "id": 14,
+        "x": 0.5991,
+        "y": 0.4776,
+        "z": -0.0384
+      },
+      {
+        "id": 15,
+        "x": 0.595,
+        "y": 0.4193,
+        "z": -0.0445
+      },
+      {
+        "id": 16,
+        "x": 0.5897,
+        "y": 0.3676,
+        "z": -0.0464
+      },
+      {
+        "id": 17,
+        "x": 0.6392,
+        "y": 0.5986,
+        "z": -0.0417
+      },
+      {
+        "id": 18,
+        "x": 0.6412,
+        "y": 0.5231,
+        "z": -0.0487
+      },
+      {
+        "id": 19,
+        "x": 0.6396,
+        "y": 0.4751,
+        "z": -0.0451
+      },
+      {
+        "id": 20,
+        "x": 0.6373,
+        "y": 0.4321,
+        "z": -0.0412
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "F",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        160.67364238622548,
+        132.56617234078058,
+        97.66482326311014,
+        155.87372063145068,
+        176.93516255421792,
+        175.2840487587536,
+        176.3747343950011,
+        174.71633582510216,
+        169.8722375146403,
+        177.24319692595213
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "left",
+    "capture_count": 5,
+    "source": "Five reference captures from lesson-23-F_experiment.json",
+    "evaluation_scope": "Left-hand F profile from five captures; not yet validated against look-alike wrong poses.",
+    "tip_contact_check": {
+      "enabled": true,
+      "version": 1,
+      "name": "thumb_index_tip_gap",
+      "landmarks": [
+        4,
+        8
+      ],
+      "upper_limit": 0.31929889823684376,
+      "reference_maxima": 0.21929889823684373,
+      "additive_margin": 0.1,
+      "construction": "Largest thumb-index tip gap across the five references plus a provisional margin, in palm-length units.",
+      "validation_scope": "Limit built from the five references only; fresh-data evaluation pending."
+    }
+  },
+  "assets": []
+}

@@ -1,0 +1,178 @@
+{
+  "format": "fyp-static-lesson",
+  "version": 1,
+  "identity": {
+    "language": "ASL",
+    "category": "숫자",
+    "sign_name": "9"
+  },
+  "category_description": "Numbers",
+  "lesson": {
+    "sign_name": "9",
+    "difficulty": "쉬움",
+    "video_url": null,
+    "image_url": null,
+    "description": "hold your dominant hand up with your palm facing forward and touch the tip of your index finger to your thumb while keeping your middle, ring, and pinky fingers extended straight up. / 주로 사용하는 손을 손바닥이 앞으로 향하게 들어 올리고, 검지 끝을 엄지에 닿게 하면서 중지, 약지, 손가락은 곧게 펴세요",
+    "hint": ""
+  },
+  "gesture": {
+    "sign_name": "9",
+    "category": "숫자",
+    "hand": "right",
+    "landmarks": [
+      {
+        "id": 0,
+        "x": 0.3062,
+        "y": 0.7602,
+        "z": 0
+      },
+      {
+        "id": 1,
+        "x": 0.353,
+        "y": 0.739,
+        "z": -0.0286
+      },
+      {
+        "id": 2,
+        "x": 0.3977,
+        "y": 0.6736,
+        "z": -0.0382
+      },
+      {
+        "id": 3,
+        "x": 0.4263,
+        "y": 0.606,
+        "z": -0.0461
+      },
+      {
+        "id": 4,
+        "x": 0.4119,
+        "y": 0.5499,
+        "z": -0.0516
+      },
+      {
+        "id": 5,
+        "x": 0.3949,
+        "y": 0.6037,
+        "z": 0.0035
+      },
+      {
+        "id": 6,
+        "x": 0.4091,
+        "y": 0.5468,
+        "z": -0.0116
+      },
+      {
+        "id": 7,
+        "x": 0.4045,
+        "y": 0.5415,
+        "z": -0.0243
+      },
+      {
+        "id": 8,
+        "x": 0.3931,
+        "y": 0.5518,
+        "z": -0.0283
+      },
+      {
+        "id": 9,
+        "x": 0.367,
+        "y": 0.5794,
+        "z": 0.0091
+      },
+      {
+        "id": 10,
+        "x": 0.3926,
+        "y": 0.5084,
+        "z": 0.0119
+      },
+      {
+        "id": 11,
+        "x": 0.4073,
+        "y": 0.4582,
+        "z": 0.0114
+      },
+      {
+        "id": 12,
+        "x": 0.4203,
+        "y": 0.4055,
+        "z": 0.0118
+      },
+      {
+        "id": 13,
+        "x": 0.3351,
+        "y": 0.5739,
+        "z": 0.007
+      },
+      {
+        "id": 14,
+        "x": 0.3413,
+        "y": 0.5038,
+        "z": 0.0032
+      },
+      {
+        "id": 15,
+        "x": 0.3442,
+        "y": 0.4557,
+        "z": -0.004
+      },
+      {
+        "id": 16,
+        "x": 0.3468,
+        "y": 0.4111,
+        "z": -0.0085
+      },
+      {
+        "id": 17,
+        "x": 0.2983,
+        "y": 0.5844,
+        "z": 0.0013
+      },
+      {
+        "id": 18,
+        "x": 0.2834,
+        "y": 0.5442,
+        "z": -0.0056
+      },
+      {
+        "id": 19,
+        "x": 0.2721,
+        "y": 0.5148,
+        "z": -0.0095
+      },
+      {
+        "id": 20,
+        "x": 0.2651,
+        "y": 0.4829,
+        "z": -0.0112
+      }
+    ]
+  },
+  "recognition_profile": {
+    "enabled": true,
+    "sign_name": "9",
+    "method": "angles",
+    "slope": 1,
+    "threshold": 70,
+    "reference": {
+      "angles": [
+        174.51555852451813,
+        122.31164573746187,
+        91.41471524872786,
+        142.52994460794733,
+        176.1700590202795,
+        174.30709119563866,
+        174.82057522859287,
+        175.80516405002635,
+        176.61423993347086,
+        171.93298652999619
+      ],
+      "reference_method": "mean_joint_angles"
+    },
+    "reference_hand": "right",
+    "capture_count": 5,
+    "source": "lesson-14-9_experiment.json",
+    "evaluation_scope": "Number 9 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
+  },
+  "assets": []
+}
