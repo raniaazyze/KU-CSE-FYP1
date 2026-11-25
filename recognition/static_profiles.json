@@ -380,6 +380,32 @@
   "capture_count": 5,
   "source": "lesson-13-8_experiment.json",
   "evaluation_scope": "Number 8 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
+},
+"14": {
+  "enabled": true,
+  "sign_name": "9",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      174.51555852451813,
+      122.31164573746187,
+      91.41471524872786,
+      142.52994460794733,
+      176.1700590202795,
+      174.30709119563866,
+      174.82057522859287,
+      175.80516405002635,
+      176.61423993347086,
+      171.93298652999619
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-14-9_experiment.json",
+  "evaluation_scope": "Number 9 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
 }
   }
 }
