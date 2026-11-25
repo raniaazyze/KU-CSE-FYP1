@@ -354,6 +354,32 @@
     "ring_weight": 0.5,
     "thumb_ring_gap_limit": 0.55
   }
+},
+"13": {
+  "enabled": true,
+  "sign_name": "8",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      156.72205859847983,
+      143.0036365180353,
+      176.11374492319513,
+      174.07552074912013,
+      46.86814044350013,
+      149.9765563325763,
+      171.06706066412778,
+      174.75013087767198,
+      174.839555243473,
+      178.064536362643
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-13-8_experiment.json",
+  "evaluation_scope": "Number 8 preliminary single-participant evaluation: 10/10 correct accepted and 0/10 incorrect accepted per hand in 40 saved inputs. Fresh actual-app evaluation pending."
 }
   }
 }
