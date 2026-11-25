@@ -323,6 +323,37 @@
         "construction": "Maximum thumb-tip (4) to little-finger-tip (20) distance across five references divided by wrist (0) to middle MCP (9) distance, plus provisional 0.15 margin. Image-space proximity does not prove physical contact.",
         "validation_scope": "Feature selected after inspecting these 40 inputs. Six correct poses still fail angle scoring. No 7/8/9 negatives in this dataset; fresh validation required."
       }
-    }
+    },
+    "12": {
+  "enabled": true,
+  "sign_name": "7",
+  "method": "angles",
+  "slope": 1,
+  "threshold": 70,
+  "reference": {
+    "angles": [
+      156.4451189244938,
+      165.4870789192776,
+      174.64340622288518,
+      175.69143299393528,
+      170.8107554487623,
+      177.89869968873523,
+      79.31694757767414,
+      146.3012746353786,
+      173.2330584203897,
+      175.4524215451924
+    ],
+    "reference_method": "mean_joint_angles"
+  },
+  "reference_hand": "right",
+  "capture_count": 5,
+  "source": "lesson-12-7_experiment.json",
+  "evaluation_scope": "Number 7 development candidate. Saved-input replay: correct right 10/10, correct left 9/10; incorrect accepted 0/10 per hand. Settings selected using these inputs; fresh evaluation pending.",
+  "number_7_checks": {
+    "enabled": true,
+    "ring_weight": 0.5,
+    "thumb_ring_gap_limit": 0.55
+  }
+}
   }
 }

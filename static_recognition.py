@@ -2,9 +2,55 @@
 import json
 import math
 from pathlib import Path
-from gesture_utils import compare, apply_shape_checks, LandmarkError
+from gesture_utils import compare, apply_shape_checks, normalize, LandmarkError
 
 PROFILE_PATH = Path(__file__).resolve().parent / 'recognition' / 'static_profiles.json'
+
+def apply_number_7_checks(points, comparison, settings):
+    # Reduce the ring angle's influence, while checking thumb–ring proximity.
+    weight = settings["ring_weight"]
+    limit = settings["thumb_ring_gap_limit"]
+
+    if not 0 < weight <= 1 or not limit > 0:
+        raise LandmarkError("Invalid number 7 recognition settings.")
+
+    errors = dict(comparison["finger_errors"])
+    errors["ring"] *= weight
+    distance = max(errors.values())
+
+    angle_score = round(max(
+        0, 100 - comparison["slope"] * distance
+    ))
+
+    points = normalize(points)
+    gap = math.sqrt(sum(
+        (points[4][axis] - points[16][axis]) ** 2
+        for axis in ("x", "y", "z")
+    ))
+
+    threshold = comparison["threshold"]
+    proximity_passed = gap <= limit
+    shape_score = math.floor(max(
+        0, 100 - (100 - threshold) * gap / limit
+    ))
+
+    result = dict(comparison)
+    result.update(
+        unweighted_angle_score=comparison["score"],
+        distance=distance,
+        weighted_finger_errors=errors,
+        angle_score=angle_score,
+        shape_score=shape_score,
+        shape_features={"thumb_ring_tip_gap": gap},
+        shape_upper_limits={"thumb_ring_tip_gap": limit},
+        shape_checks={"thumb_ring_tip_gap": proximity_passed},
+        ring_weight=weight,
+        score=min(angle_score, shape_score),
+    )
+    result["passed"] = (
+        proximity_passed and result["score"] >= threshold
+    )
+    return result
 
 def compare_lesson(user_landmarks, reference_data, lesson_id, sign_name, request_data):
     # This file is required so a missing installation cannot silently use old scoring.
@@ -26,6 +72,13 @@ def compare_lesson(user_landmarks, reference_data, lesson_id, sign_name, request
         # Configured lessons use server-owned settings, even if an old browser sends "original".
         result = compare(user_landmarks, {'angles': angles}, 'angles',
                          profile['slope'], profile['threshold'])
+        number_7 = profile.get("number_7_checks", {})
+        if number_7.get("enabled") is True:
+            if sign_name != "7":
+                raise LandmarkError("Number 7 checks require sign name 7.")
+            result = apply_number_7_checks(
+                user_landmarks, result, number_7
+            )
         if profile.get('shape_checks', {}).get('enabled') is True:
             result = apply_shape_checks(user_landmarks, result, profile['shape_checks'])
         result.update(reference_source=('configured_single_angles'
