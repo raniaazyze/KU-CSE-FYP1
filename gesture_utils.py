@@ -94,6 +94,20 @@ def joint_angles(points):
 # lengths before measuring how different they are, so it tolerates speed
 # variation without tolerating a genuinely different movement.
 
+def fingertip_distances(points):
+    """Five open/closed features for one frame: the distance from the wrist to each
+    fingertip (landmarks 4, 8, 12, 16, 20) divided by the palm length (wrist to
+    landmark 9). Roughly 0.6-1.0 for a closed fist and 1.7-2.2 for an open hand.
+    Dividing by palm length removes hand size and camera distance, and the values
+    do not depend on left/right hand. Added for moving signs because the ten
+    joint angles separate open/close motions poorly (see the 22-attempt experiment)."""
+    values = validate(points)
+    wrist = values[0]
+    palm = _euclidean(values[9], wrist)
+    if palm < 1e-6:
+        raise LandmarkError('Palm measurement is too small to normalize. Show your whole hand and recapture.')
+    return [_euclidean(values[t], wrist) / palm for t in (4, 8, 12, 16, 20)]
+
 def _sequence_features(frames, method):
     """Turn a list of 21-landmark frames into a list of per-frame feature
     vectors. 'angles' (the static-sign default) is also the default here,
@@ -104,7 +118,9 @@ def _sequence_features(frames, method):
         return [joint_angles(f) for f in frames]
     if method == 'normalized':
         return [[v for p in normalize(f, True) for v in (p['x'], p['y'], p['z'])] for f in frames]
-    raise LandmarkError('Method must be angles or normalized for sequence comparison.')
+    if method == 'fingertips':
+        return [fingertip_distances(f) for f in frames]
+    raise LandmarkError('Method must be angles, fingertips or normalized for sequence comparison.')
 
 def _euclidean(a, b):
     return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
@@ -130,9 +146,11 @@ def compare_sequence(user_frames, reference_frames, method='angles', slope=None,
     compare() (static signs) and not called anywhere in the live lesson
     flow yet -- Phase 3 prototype only, reached through its own experimental
     endpoint so it can't affect /api/analyze."""
-    if method not in ('angles', 'normalized'):
-        raise LandmarkError('Method must be angles or normalized for sequence comparison.')
-    slope = (2 if method == 'angles' else 20) if slope is None else slope
+    if method not in ('angles', 'fingertips', 'normalized'):
+        raise LandmarkError('Method must be angles, fingertips or normalized for sequence comparison.')
+    # fingertips distances are ~0.1-1.0 for a gesture match/mismatch, so slope 100 maps
+    # that onto 0-100. This is a unit scale, NOT a tuned value; calibrate on new data.
+    slope = {'angles': 2, 'normalized': 20, 'fingertips': 100}[method] if slope is None else slope
     if isinstance(slope, bool) or not isinstance(slope, (int, float)) or not math.isfinite(slope) or slope <= 0:
         raise LandmarkError('Slope must be a positive finite number.')
     if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not math.isfinite(threshold) or not 0 <= threshold <= 100:
